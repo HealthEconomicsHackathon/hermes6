@@ -90,10 +90,15 @@ markov_reduced_dimensions <- function() {
   treatment.costs<-array(dim=c(n.treatments,n.samples),dimnames=list(treatment.names,NULL))
   
   # Cost of the smoking cessation website is a one-off subscription fee of ?50
-  treatment.costs["SoC with website",]<-50
+  treatment.costs["SoC with website",]<-50      
   # Zero cost for standard of care
   treatment.costs["SoC",]<-0
   
+  # In this example, state cost is 0 (no treatment) and treatment.cost is artificially decided, so costs remain the same in all n.sample (simulation)
+  # We might be able to speed up if removing array and using single matrix, but preserving this function can let the model be more flexible for future change
+  
+  
+
   #############################################################################
   ## Simulation ###############################################################
   #############################################################################
@@ -169,6 +174,8 @@ markov_reduced_dimensions <- function() {
       # And total QALYs for each cycle
       cycle.qalys[i.treatment,i.sample,]<-
         cohort.vectors_tr_sample%*%state.qalys[i.sample,]
+      # a comment that is irrelvant to speed up --> even if sd 0.01 is quite small, 
+      # using rnorm is suggesting that there is a potentiality of utility > 1, this should be capped at 1
       
       # Combine the cycle.costs and treatment.costs to get total costs
       # Apply the discount factor 
@@ -177,6 +184,7 @@ markov_reduced_dimensions <- function() {
       total.costs[i.treatment,i.sample]<-treatment.costs[i.treatment,i.sample] +
         cycle.costs[i.treatment,i.sample,]%*%
         disc_vec
+      
       
       # Combine the cycle.qalys to get total qalys
       # Apply the discount factor 
@@ -231,5 +239,9 @@ markov_reduced_dimensions <- function() {
   output
 }
 
-## TEST IF GITHUB BRANCH PUSH WORKS
+# Test Time for the basic function
+system.time(markov_reduced_dimensions())
+#    user  system elapsed 
+#    5.08    0.03    5.39 
 
+ICER
