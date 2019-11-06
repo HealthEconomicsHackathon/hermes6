@@ -11,7 +11,13 @@ Description: What the package does (one paragraph).
 License: What license it uses
 Encoding: UTF-8
 LazyData: true
+Requires:
+    VGAM
 Suggests: 
-    testthat (>= 2.1.0)
+    testthat (>= 2.1.0),
+    knitr,
+    microbenchmark,
+    rmarkdown
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
+VignetteBuilder: knitr
