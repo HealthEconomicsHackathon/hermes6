@@ -11,7 +11,7 @@ Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Requires:
+Imports:
     VGAM
 Suggests: 
     testthat (>= 2.1.0),
