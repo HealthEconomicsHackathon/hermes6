@@ -27,8 +27,7 @@ function_names
 ```
 
 ```{r}
-markov_functions <- lapply(function_names, get)
-names(markov_functions) <- function_names
-microbenchmark::microbenchmark(list = lapply(markov_functions, do.call, list()), times = 5)
+func_calls <- lapply(function_names, function(func) call(func))
+microbenchmark::microbenchmark(list = func_calls, times = 5)
 ```
 
