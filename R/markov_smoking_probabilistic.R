@@ -28,6 +28,7 @@ state.names<-c("Smoking","Not smoking")
 # This is 10 as the time horizon is 5 years and cycle length is 6 months
 # The code will work for any even n.cycles (need to change the discounting code if
 # an odd number of cycles is desired)
+
 n.cycles<-100
 
 # Define simulation parameters
@@ -226,3 +227,4 @@ probability.cost.effective<-sum(incremental.net.benefit>0)/n.samples
 # Now use the BCEA package to analyse the results...
 
 })
+
