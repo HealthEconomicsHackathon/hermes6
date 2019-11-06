@@ -3,7 +3,13 @@
 
 # Load necessary libraries
 # If not installed use the following line first
-# install.packages("VGAM")
+
+
+#' Markov smoking model
+#'
+#' @return Output
+#' @export
+#'
 markov <- function() {
   set.seed(14143)
   
@@ -25,11 +31,11 @@ markov <- function() {
   # This is 10 as the time horizon is 5 years and cycle length is 6 months
   # The code will work for any even n.cycles (need to change the discounting code if
   # an odd number of cycles is desired)
-  n.cycles<-10
+  n.cycles<-100
   
   # Define simulation parameters
   # This is the number of PSA samples to use
-  n.samples<-1000
+  n.samples<-10000
   
   #############################################################################
   ## Input parameters #########################################################
@@ -49,13 +55,13 @@ markov <- function() {
   
   # First the transition matrix for Standard of Care with website
   # Transitions from smoking 
-  transition.matrices["SoC with website",,"Smoking",]<-rdiric(n.samples,c(85,15))
+  transition.matrices["SoC with website",,"Smoking",]<-VGAM::rdiric(n.samples,c(85,15))
   # Transitions from not smoking
-  transition.matrices["SoC with website",,"Not smoking",]<-rdiric(n.samples,c(8,92))
+  transition.matrices["SoC with website",,"Not smoking",]<-VGAM::rdiric(n.samples,c(8,92))
   
   # Second the transition matrix for Standard of Care
   # Transitions from smoking 
-  transition.matrices["SoC",,"Smoking",]<-rdiric(n.samples,c(88,12))
+  transition.matrices["SoC",,"Smoking",]<-VGAM::rdiric(n.samples,c(88,12))
   # Transitions from not smoking
   # These should be the same as the transition probabilities from not smoking for SoC with website
   # as the website has no impact on probability of relapse
