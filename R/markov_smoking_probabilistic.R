@@ -4,8 +4,14 @@
 # Load necessary libraries
 # If not installed use the following line first
 # install.packages("VGAM")
+
+rm(list = ls())
+
 library(VGAM)
 
+set.seed(14143)
+
+system.time({
 
 # Define the number and names of treatments
 # These are Standard of Care with website
@@ -22,11 +28,11 @@ state.names<-c("Smoking","Not smoking")
 # This is 10 as the time horizon is 5 years and cycle length is 6 months
 # The code will work for any even n.cycles (need to change the discounting code if
 # an odd number of cycles is desired)
-n.cycles<-10
+n.cycles<-100
 
 # Define simulation parameters
 # This is the number of PSA samples to use
-n.samples<-1000
+n.samples<-10000
 
 #############################################################################
 ## Input parameters #########################################################
@@ -73,7 +79,7 @@ state.qalys[,"Smoking"]<-rnorm(n.samples,mean=0.95,sd=0.01)/2
 state.qalys[,"Not smoking"]<-1/2
 
 # And finally define the state costs
-# These are all zero as the only cost is a one-off subscription fee of £50
+# These are all zero as the only cost is a one-off subscription fee of ?50
 # to the smoking cessation website
 state.costs<-array(0,dim=c(n.samples, n.states),dimnames=list(NULL,state.names))
 
@@ -83,7 +89,7 @@ state.costs<-array(0,dim=c(n.samples, n.states),dimnames=list(NULL,state.names))
 # want to include uncertainty/randomness in the cost
 treatment.costs<-array(dim=c(n.treatments,n.samples),dimnames=list(treatment.names,NULL))
 
-# Cost of the smoking cessation website is a one-off subscription fee of £50
+# Cost of the smoking cessation website is a one-off subscription fee of ?50
 treatment.costs["SoC with website",]<-50
 # Zero cost for standard of care
 treatment.costs["SoC",]<-0
@@ -122,6 +128,12 @@ total.qalys<-array(dim=c(n.treatments,n.samples),
 	dimnames=list(treatment.names,NULL))
 
 
+#i.treatment <- 1
+#i.sample <- 1
+#i.cycle <- 2
+
+disc_vec <- (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
+
 # The remainder of the cohort.vectors will be filled in by Markov updating below
 
 # Main model code
@@ -131,6 +143,9 @@ for(i.treatment in 1:n.treatments)
 	# Loop over the PSA samples
 	for(i.sample in 1:n.samples)
 	{
+	  
+	  transition.matrices_tr_sample <- transition.matrices[i.treatment,i.sample,,]
+	  
 		# Loop over the cycles
 		# Cycle 1 is already defined so only need to update cycles 2:n.cycles
 		for(i.cycle in 2:n.cycles)
@@ -139,8 +154,8 @@ for(i.treatment in 1:n.treatments)
 			# Multiply previous cycle's cohort vector by transition matrix
 			# i.e. pi_j = pi_(j-1)*P
 			cohort.vectors[i.treatment,i.sample,i.cycle,]<-
-				cohort.vectors[i.treatment,i.sample,i.cycle-1,]%*%
-				transition.matrices[i.treatment,i.sample,,]
+				cohort.vectors[i.treatment,i.sample,i.cycle-1,] %*%
+			  transition.matrices_tr_sample
 		}
 		
 		# Now use the cohort vectors to calculate the 
@@ -157,14 +172,14 @@ for(i.treatment in 1:n.treatments)
 		# Each year acounts for two cycles so need to repeat the discount values
 		total.costs[i.treatment,i.sample]<-treatment.costs[i.treatment,i.sample]+
 			cycle.costs[i.treatment,i.sample,]%*%
-			(1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
+			disc_vec
 
 		# Combine the cycle.qalys to get total qalys
 		# Apply the discount factor 
 		# (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
 		# Each year acounts for two cycles so need to repeat the discount values
 		total.qalys[i.treatment,i.sample]<-cycle.qalys[i.treatment,i.sample,]%*%
-			(1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
+			disc_vec
 	}
 }
 
@@ -173,7 +188,7 @@ for(i.treatment in 1:n.treatments)
 #############################################################################
 
 # Average costs
-# These are £50 on the website and 0 on standard of care as there are no
+# These are ?50 on the website and 0 on standard of care as there are no
 # costs other than the website subscription cost
 average.costs<-rowMeans(total.costs)
 # Average effects (in QALY units)
@@ -182,24 +197,24 @@ average.costs<-rowMeans(total.costs)
 average.effects<-rowMeans(total.qalys)
 
 # Incremental costs and effects relative to standard of care
-# No uncertainty in the costs as the website cost is fixed at £50
+# No uncertainty in the costs as the website cost is fixed at ?50
 incremental.costs<-total.costs["SoC with website",]-total.costs["SoC",]
 # In some samples the website leads to higher QALYs but in others it is negative
 # There is uncertainty as to whether the website is an improvement over SoC
 incremental.effects<-total.qalys["SoC with website",]-total.qalys["SoC",]
 
 # The ICER comparing Standard of care with website to standard of care
-# This is much lower than the £20,000 willingness-to-pay threshold indicating
+# This is much lower than the ?20,000 willingness-to-pay threshold indicating
 # good value for money
 ICER<-mean(incremental.costs)/mean(incremental.effects)
 
-# Incremental net benefit at the £20,000 willingness-to-pay
+# Incremental net benefit at the ?20,000 willingness-to-pay
 # Sometimes positive (website more cost-effective) and sometimes negative (SoC more cost-effective)
 # Need to look at averages and consider probabilities of cost-effectiveness
 incremental.net.benefit<-20000*incremental.effects-incremental.costs
 
 # Average incremental net benefit
-# This is positive indicating cost-effectiveness at the £20,000 threshold
+# This is positive indicating cost-effectiveness at the ?20,000 threshold
 average.inb<-mean(incremental.net.benefit)
 
 # Probability cost-effective
@@ -209,3 +224,5 @@ average.inb<-mean(incremental.net.benefit)
 probability.cost.effective<-sum(incremental.net.benefit>0)/n.samples
 
 # Now use the BCEA package to analyse the results...
+
+})
