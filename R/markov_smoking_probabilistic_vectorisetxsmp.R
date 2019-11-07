@@ -10,8 +10,7 @@
 #' @return Output
 #' @export
 markov_vectorisetxsmp <- function(n.cycles = 100, n.samples = 10000) {
-  require(foreach)
-  
+
   set.seed(14143)
   
   # Define the number and names of treatments
@@ -172,9 +171,9 @@ markov_vectorisetxsmp <- function(n.cycles = 100, n.samples = 10000) {
       total.costs_tr_sample <- treatment.costs_tr[i.sample] + cycle.costs_tr_sample[,1]%*%disc_vec
       total.qalys_tr_sample <- cycle.qalys_tr_sample[,1]%*%disc_vec
       
-      list(total.costs = total.costs_tr_sample, total.qalys = total.qalys_tr_sample)
+      return(list(total.costs = total.costs_tr_sample, total.qalys = total.qalys_tr_sample))
       
-    }) -> df
+    }) -> list_sample
     
     df <- bind_rows(list_sample)
     
