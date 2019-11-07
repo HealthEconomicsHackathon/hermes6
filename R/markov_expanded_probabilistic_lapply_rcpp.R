@@ -7,11 +7,6 @@
 # Load necessary libraries
 # If not installed use the following line first
 # install.packages("VGAM")
- 
-#' Reduced dimensions in markov smoking probabilistic model
-#'
-#' @return Output
-#' @export
 
 Rcpp::cppFunction('NumericMatrix rcpp_loop(NumericMatrix mat_in, NumericMatrix transition, int n) {
 NumericMatrix out(mat_in.nrow(), transition.ncol());
@@ -27,6 +22,10 @@ for (int i = 1; i < n; i++) {
 return(out);
 }')
 
+#' Reduced dimensions in markov smoking probabilistic model
+#'
+#' @return Output
+#' @export
 markov_expanded_lapply_rcpp <- function(){
   set.seed(14143)
   
@@ -223,6 +222,3 @@ markov_expanded_lapply_rcpp <- function(){
   # Now use the BCEA package to analyse the results...
   output
 }
-
-system.time(output<-markov_expanded_lapply_rcpp())
-output$probability.cost.effective
