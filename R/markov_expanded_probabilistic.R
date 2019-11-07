@@ -34,7 +34,7 @@ markov_expanded <- function() {
   
   # Define simulation parameters
   # This is the number of PSA samples to use
-  n.samples<-10000
+  n.samples<-25000
   
   #############################################################################
   ## Input parameters #########################################################
@@ -230,4 +230,3 @@ markov_expanded <- function() {
   output
 }
 
-system.time(output<-markov_expanded())

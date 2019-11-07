@@ -221,4 +221,3 @@ markov_expanded_lapply <- function(){
   output
 }
 
-system.time(output<-markov_expanded_lapply())

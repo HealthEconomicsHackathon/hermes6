@@ -12,11 +12,13 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:
+    tibble,
+    magrittr,
     VGAM
 Suggests: 
     testthat (>= 2.1.0),
     knitr,
-    microbenchmark,
+    pkgdown,
     rmarkdown
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
