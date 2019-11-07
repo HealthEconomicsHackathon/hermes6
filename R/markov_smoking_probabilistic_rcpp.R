@@ -10,7 +10,7 @@
 #' @return Output
 #' @export
 
-.r_for <- function(v, transition, n.cycles){
+r_for <- function(v, transition, n.cycles){
   
   for(i in 2:n.cycles)
   {
@@ -23,15 +23,20 @@
 }
   
 Rcpp::cppFunction('NumericMatrix rcpp_loop(NumericMatrix mat_in, NumericMatrix transition, int n) {
-NumericMatrix out(n, 2);
+NumericMatrix out(mat_in.nrow(), transition.ncol());
 out(0, _) = mat_in(0, _);
+NumericVector rm1, cm2;
 for (int i = 1; i < n; i++) {
-out(i, 0) = out(i - 1, 0) * transition(0, 0) + out(i - 1, 1) * transition(1, 0);
-out(i, 1) = out(i - 1, 0) * transition(0, 1) + out(i - 1, 1) * transition(1, 1);
+  rm1 = out(i - 1,_);
+  for (size_t j = 0; j < transition.ncol(); ++j) {
+    cm2 = transition(_,j);
+    out(i,j) = std::inner_product(rm1.begin(), rm1.end(), cm2.begin(), 0.);              
+  }
 }
-return out;
+return(out);
 }')
-  
+
+
 markov_rcpp <- function() {
   set.seed(14143)
   
@@ -175,7 +180,7 @@ markov_rcpp <- function() {
       # Cycle 1 is already defined so only need to update cycles 2:n.cycles
       cohort.vectors[i.treatment, i.sample,,] <- 
         rcpp_loop(mat_in = cohort.vectors[i.treatment, i.sample,,],transition = transition.matrices_tr_sample, n = n.cycles)
-        #.r_for(v = cohort.vectors[i.treatment, i.sample,,],transition = transition.matrices_tr_sample, n.cycles = n.cycles)
+        #r_for(v = cohort.vectors[i.treatment, i.sample,,],transition = transition.matrices_tr_sample, n.cycles = n.cycles)
       
       cohort.vectors_tr_sample <- cohort.vectors[i.treatment,i.sample,,]
       
