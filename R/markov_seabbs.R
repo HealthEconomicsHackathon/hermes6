@@ -13,7 +13,6 @@
 #' @param discount Numeric, defaults to 1.035. Discounting to apply to costs and qalys
 #' @return Output
 #' @export
-#' 
 #' @examples 
 #' 
 #' markov_seabbs()
