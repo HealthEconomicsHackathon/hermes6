@@ -230,4 +230,3 @@ markov_expanded <- function() {
   output
 }
 
-system.time(output<-markov_expanded())
