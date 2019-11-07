@@ -1,7 +1,11 @@
+devtools::install_github('nathanvan/parallelsugar')
+
+
 library(VGAM)
 library(tidyverse)
 library(parallel)
 library(foreach)
+
 
 files.sources <- file.path(getwd(), "R", list.files(file.path(getwd(), "R")))
 sapply(files.sources, source)
