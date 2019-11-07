@@ -251,14 +251,19 @@ system.time(markov_reduced_dimensions())
 
 ###########################################################
 # try try
-###########################################################
+###########################################################   
+
 
 # Function to run the analysis based on treatment arms (scenarios)
 markov_reduced_dimensions2 <- function(scenario = "UoC_Web") {
-  
+  set.seed(14143)
+# HOUSE KEEPING  
 # Define cycles and samples (simulation times)
 n.cycles<-100
 n.samples<-10000
+
+#Discount
+disc_vec <- (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
 
 # function of define probabilites that depend on treatment arms
 treatment_arm <- function(treatment = "UoC") {
@@ -278,8 +283,8 @@ treatment_arm <- function(treatment = "UoC") {
 ######################################################
 # Define all variables (objects) that have 
 # uncertanties based on treatment arms
-#######################################################
-#####!!!!!!!!!!!!!!!!!!!
+
+
 p.remain_smoke <- treatment_arm (treatment = scenario) [["p.remain_smoke"]]
 cost.oneoff <- treatment_arm (treatment = scenario) [["cost.oneoff"]]
 
@@ -294,9 +299,6 @@ qaly.notsmoke <- rep(1/2, times=n.samples)
 # State Cost
 cost.smoke <-rep(0, times=n.samples)
 cost.notsmoke <- rep(0, times=n.samples)
-
-#Discount
-disc_vec <- (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
 
 
 # Create matrices for probability of staying in each states cross each cycle (colomns) and simulations (rows)
