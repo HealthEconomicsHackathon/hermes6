@@ -239,6 +239,13 @@ system.time(markov_reduced_dimensions())
 # user  system elapsed 
 # 7.16    0.03    7.41
 
+# $average.costs
+# SoC with website              SoC 
+# 50                0 
+
+# $average.effects
+# SoC with website              SoC 
+# 23.78637         23.71939 
 
 
 
@@ -247,7 +254,7 @@ system.time(markov_reduced_dimensions())
 ###########################################################
 
 # Function to run the analysis based on treatment arms (scenarios)
-markov_reduced_dimensions2 <- function(scenario = "UoC") {
+markov_reduced_dimensions2 <- function(scenario = "UoC_Web") {
   
 # Define cycles and samples (simulation times)
 n.cycles<-100
@@ -317,6 +324,7 @@ TC <- TE <- vector("numeric", length = n.samples)
 TE <- (qaly.smoke * m.smoke[,-1] + qaly.notsmoke* m.notsmoke[,-(n.cycles)]) %*% disc_vec   # total discounted cost for all simulations
 TC <- (cost.smoke * m.smoke[,-1] + cost.notsmoke* m.notsmoke[,-(n.cycles)]) %*% disc_vec + cost.oneoff    # total discounted QALYs for all simulations
 
+
 # Mean of QALY and Costs and output
 results <- list("TE" = mean(TE), "TC" = mean(TC))
 return(results) 
@@ -328,6 +336,8 @@ results_UoC_Web <- markov_reduced_dimensions2 (scenario = "UoC_Web")
 
 ICER <- (results_UoC_Web [["TC"]] - results_UoC [["TC"]]) / (results_UoC_Web [["TE"]] - results_UoC [["TE"]])
 
+
+results_UoC [["TE"]]
 
 system.time(markov_reduced_dimensions2()) 
 
