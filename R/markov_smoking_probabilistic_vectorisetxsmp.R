@@ -9,7 +9,9 @@
 #'
 #' @return Output
 #' @export
-markov_parallisesmp_mclapply <- function(n.cycles = 100, n.samples = 10000) {
+markov_vectorisetxsmp <- function(n.cycles = 100, n.samples = 10000) {
+  require(foreach)
+  
   set.seed(14143)
   
   # Define the number and names of treatments
@@ -127,7 +129,7 @@ markov_parallisesmp_mclapply <- function(n.cycles = 100, n.samples = 10000) {
   
   # Main model code
   # Loop over the treatment options
-
+  
   
   
   lapply(c(1:n.treatments), function(i.treatment){
@@ -139,7 +141,9 @@ markov_parallisesmp_mclapply <- function(n.cycles = 100, n.samples = 10000) {
     total.costs_tr <- total.costs[i.treatment,]
     total.qalys_tr <- total.qalys[i.treatment,]
     # Loop over the PSA samples
-    parallel::mclapply(c(1:n.samples), function(i.sample){
+    
+    
+    lapply(c(1:n.samples), function(i.sample){
       
       transition.matrices_tr_sample <- transition.matrices_tr[i.sample,,]
       cohort.vectors_tr_sample <- cohort.vectors_tr[i.sample,,]
@@ -150,7 +154,7 @@ markov_parallisesmp_mclapply <- function(n.cycles = 100, n.samples = 10000) {
       total.qalys_tr_sample <- total.qalys_tr[i.sample]
       
       transition.matrices_tr_sample <- transition.matrices_tr[i.sample,,]
-
+      
       cohort.vectors_tr_sample <- cohort.vectors_tr[i.sample,,]
       
       # Loop over the cycles
@@ -168,15 +172,15 @@ markov_parallisesmp_mclapply <- function(n.cycles = 100, n.samples = 10000) {
       total.costs_tr_sample <- treatment.costs_tr[i.sample] + cycle.costs_tr_sample[,1]%*%disc_vec
       total.qalys_tr_sample <- cycle.qalys_tr_sample[,1]%*%disc_vec
       
-      return(list(total.costs = total.costs_tr_sample, total.qalys = total.qalys_tr_sample))
-
-    }) -> list_sample
+      list(total.costs = total.costs_tr_sample, total.qalys = total.qalys_tr_sample)
+      
+    }) -> df
     
     df <- bind_rows(list_sample)
     
     # total.qalys_tr <- lapply(list_sample, FUN = `[[`, "total.qalys_tr_sample")
     # total.costs_tr <- lapply(list_sample, FUN = `[[`, "total.costs_tr_sample")
-
+    
     return(df)
     
   }) -> output.list
