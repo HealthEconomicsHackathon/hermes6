@@ -31,3 +31,6 @@ func_calls <- lapply(function_names, function(func) call(func))
 microbenchmark::microbenchmark(list = func_calls, times = 5)
 ```
 
+```
+
+```
