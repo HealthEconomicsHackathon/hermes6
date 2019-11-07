@@ -4,7 +4,7 @@
 \alias{markov_seabbs}
 \title{Markov smoking model}
 \usage{
-markov_seabbs(no_samples = 1000, duration = 100, discount = 1.035)
+markov_seabbs(no_samples = 10000, duration = 100, discount = 1.035)
 }
 \arguments{
 \item{n.cycles}{Numeric, the number of model cycles. Defaults to 10. This is a

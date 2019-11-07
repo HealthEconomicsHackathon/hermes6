@@ -14,8 +14,9 @@
 #' @return Output
 #' @export
 #'
-markov_seabbs <- function(no_samples = 1000, duration = 100, discount = 1.035) {
+markov_seabbs <- function(no_samples = 10000, duration = 100, discount = 1.035) {
 
+  future::plan(multiprocess)
   # Transitions -------------------------------------------------------------
   # 1. Specify transition matrices for each intervention
   # Baseline - Soc
@@ -251,12 +252,12 @@ markov_seabbs <- function(no_samples = 1000, duration = 100, discount = 1.035) {
   
   # Generate samples --------------------------------------------------------
   
-  samples <- purrr::map_dfr(1:no_samples, ~ single_sample(transitions = transitions_list,
+  samples <- furrr::future_map_dfr(1:no_samples, ~ single_sample(transitions = transitions_list,
                                                           state_costs = state_costs,
                                                           intervention_costs = intervention_costs,
                                                           cohorts = cohorts, qalys = qalys), .id = "sample")
   
-  results <- purrr::map_dfr(1:nrow(samples), 
+  results <- furrr::future_map_dfr(1:nrow(samples), 
                             ~ run_markov(transition = samples$transition[[.]],
                                          cohort = samples$cohort[[.]],
                                          state_cost = samples$state_cost[[.]], 
