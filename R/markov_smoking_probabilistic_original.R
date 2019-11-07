@@ -127,9 +127,11 @@ markov <- function() {
   total.qalys<-array(dim=c(n.treatments,n.samples),
                      dimnames=list(treatment.names,NULL))
   
+  # Prespecify the discounting vector
+  prespec.discount <- (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
   
   # The remainder of the cohort.vectors will be filled in by Markov updating below
-  
+
   # Main model code
   # Loop over the treatment options
   for(i.treatment in 1:n.treatments)
@@ -137,6 +139,9 @@ markov <- function() {
     # Loop over the PSA samples
     for(i.sample in 1:n.samples)
     {
+      # Prespecify the transition matrices
+      prespec.transmat <- transition.matrices[i.treatment,i.sample,,]
+      
       # Loop over the cycles
       # Cycle 1 is already defined so only need to update cycles 2:n.cycles
       for(i.cycle in 2:n.cycles)
@@ -145,8 +150,7 @@ markov <- function() {
         # Multiply previous cycle's cohort vector by transition matrix
         # i.e. pi_j = pi_(j-1)*P
         cohort.vectors[i.treatment,i.sample,i.cycle,]<-
-          cohort.vectors[i.treatment,i.sample,i.cycle-1,]%*%
-          transition.matrices[i.treatment,i.sample,,]
+          cohort.vectors[i.treatment,i.sample,i.cycle-1,]%*%prespec.transmat
       }
       
       # Now use the cohort vectors to calculate the 
@@ -162,15 +166,13 @@ markov <- function() {
       # (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
       # Each year acounts for two cycles so need to repeat the discount values
       total.costs[i.treatment,i.sample]<-treatment.costs[i.treatment,i.sample]+
-        cycle.costs[i.treatment,i.sample,]%*%
-        (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
+        cycle.costs[i.treatment,i.sample,]%*%prespec.discount
       
       # Combine the cycle.qalys to get total qalys
       # Apply the discount factor 
       # (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
       # Each year acounts for two cycles so need to repeat the discount values
-      total.qalys[i.treatment,i.sample]<-cycle.qalys[i.treatment,i.sample,]%*%
-        (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
+      total.qalys[i.treatment,i.sample]<-cycle.qalys[i.treatment,i.sample,]%*%prespec.discount
     }
   }
   
