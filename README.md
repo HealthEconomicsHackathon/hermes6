@@ -7,3 +7,13 @@
 Health economics hackathon in R team 6
 
 Writing fast Markov models
+
+
+## Benchmarking
+
+You can run the benchmarking vignettte from RStudio by opening the `vignette/Benchmarking.Rmd` and clicking the `Knit` button.
+
+## Build website
+
+* In R run `pkgdown::build_site()`
+* From the terminal run `./scripts/update_web.sh`
