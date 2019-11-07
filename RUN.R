@@ -27,4 +27,4 @@ stime_vector_smp <- system.time(markov_expanded_vectorisesmp(n.states = n.states
 ## Parallelising 
 stime_parallel_foreach <- system.time(markov_expanded_parallisesmp_foreach(n.states = n.states, n.cycles = n.cycles, n.samples = n.samples, n.cores = 2))
 stime_parallel_furrr <- system.time(markov_expanded_parallisesmp_furrr(n.states = n.states, n.cycles = n.cycles, n.samples = n.samples))
-
+stime_parallel_mclapply <- system.time(markov_expanded_parallisesmp_mclapply(n.states = n.states, n.cycles = n.cycles, n.samples = n.samples))
