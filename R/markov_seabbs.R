@@ -7,10 +7,11 @@
 
 #' Markov smoking model
 #'
-#' @param n.cycles Numeric, the number of model cycles. Defaults to 10. This is a 
+#' @param duration Numeric, the number of model cycles. Defaults to 10. This is a 
 #' combination of time and cycle length (so 5 years with a cycle length of 6 months would give
 #' n.cycles).
-#' @param n.samples Numeric, the number of samples to take. Defaults to 10000. 
+#' @param no_samples Numeric, the number of samples to take. Defaults to 10000. 
+#' @param discount Numeric, defaults to 1.035. Discounting to apply to costs and qalys
 #' @return Output
 #' @export
 #'
@@ -184,8 +185,7 @@ markov_seabbs <- function(no_samples = 10000, duration = 100, discount = 1.035) 
   
   
   
-  # Run the model -----------------------------------------------------------
-  # Run the model a single time
+  # Run the model ----------------------------------------------------------
   
   run_markov <- function(transition = NULL, cohort = NULL, state_cost = NULL, 
                          intervention_cost = NULL, qalys = NULL, duration = NULL,
@@ -220,6 +220,7 @@ markov_seabbs <- function(no_samples = 10000, duration = 100, discount = 1.035) 
     
     return(out)
   }
+
   
   ## Test model run
 #  test_sim <- run_markov(transition = test_sample$transition[[1]],
