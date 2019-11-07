@@ -12,7 +12,7 @@
 #'
 #' @return Output
 #' @export
-markov_expanded_lapply <- function() {
+markov_expanded_lapply <- function(){
   set.seed(14143)
   
   # Define the number and names of treatments
@@ -107,7 +107,7 @@ markov_expanded_lapply <- function() {
   
   # Assume that everyone starts in first state
   cohort.vectors[,,1,"State 1"]<-1
-  cohort.vectors[,,1,paste("State",c(2:10))]<-0
+  cohort.vectors[,,1,paste("State",c(2:n.states))]<-0
   
   # Build an array to store the costs and QALYs accrued per cycle
   # One for each treatment, for each PSA sample, for each cycle
@@ -162,7 +162,7 @@ markov_expanded_lapply <- function() {
         # i.e. pi_j = pi_(j-1)*P
         cohort.vectors_tr_sample[i.cycle,] <- cohort.vectors_tr_sample[i.cycle-1,] %*% transition.matrices_tr_sample
       }
-      
+    
       cycle.costs_tr[i.sample,] <- cohort.vectors_tr_sample%*%state.costs[i.sample,]
       cycle.qalys_tr[i.sample,] <- cohort.vectors_tr_sample%*%state.qalys[i.sample,]
       total.costs_tr[i.sample] <- treatment.costs_tr[i.sample] + cycle.costs_tr[i.sample,]%*%disc_vec
