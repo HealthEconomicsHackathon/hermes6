@@ -344,5 +344,9 @@ system.time(markov_reduced_dimensions2())
 #    user  system elapsed 
 #    0.1     0.0     0.1
 
+#   results_UoC_Web [["TE"]]
+#   [1] 23.16121
+#   results_UoC [["TE"]]
+#   [1] 23.14788
 
 
