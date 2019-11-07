@@ -18,7 +18,8 @@ Imports:
     purrr,
     furrr,
     Rcpp,
-    future
+    future,
+    magrittr
 Suggests: 
     testthat (>= 2.1.0)
 Roxygen: list(markdown = TRUE)
