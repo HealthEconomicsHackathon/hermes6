@@ -140,8 +140,8 @@ markov_expanded_parallisesmp_foreach <- function(n.states = 10, n.cycles = 100, 
     cl <- parallel::makeCluster(n.cores)
     
     doParallel::registerDoParallel(cl)
-    
-    foreach::foreach(i.sample = c(1:n.samples), .combine = bind_rows, .export = ls(globalenv())) %dopar% {
+    `%dopar%` <- foreach::`%dopar%`
+    foreach::foreach(i.sample = c(1:n.samples), .combine = dplyr::bind_rows, .export = ls(globalenv())) %dopar% {
       
       transition.matrices_tr_sample <- transition.matrices_tr[i.sample,,]
       cohort.vectors_tr_sample <- cohort.vectors_tr[i.sample,,]

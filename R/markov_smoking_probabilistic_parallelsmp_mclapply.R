@@ -170,7 +170,7 @@ markov_expanded_parallisesmp_mclapply <- function(n.states = 10, n.cycles = 100,
       
     }) -> list_sample
     
-    output.list[[i.treatment]] <- bind_rows(list_sample)
+    output.list[[i.treatment]] <- dplyr::bind_rows(list_sample)
 
 
   } 

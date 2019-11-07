@@ -175,7 +175,7 @@ markov_vectorisetxsmp <- function(n.cycles = 100, n.samples = 10000) {
       
     }) -> list_sample
     
-    df <- bind_rows(list_sample)
+    df <- dplyr::bind_rows(list_sample)
     
     # total.qalys_tr <- lapply(list_sample, FUN = `[[`, "total.qalys_tr_sample")
     # total.costs_tr <- lapply(list_sample, FUN = `[[`, "total.costs_tr_sample")

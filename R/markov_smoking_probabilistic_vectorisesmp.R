@@ -170,7 +170,7 @@ markov_expanded_vectorisesmp <- function(n.states = 2, n.cycles = 100, n.samples
     }) -> list_sample
     
     
-    output.list[[i.treatment]] <- bind_rows(list_sample)
+    output.list[[i.treatment]] <- dplyr::bind_rows(list_sample)
       
   } 
   
