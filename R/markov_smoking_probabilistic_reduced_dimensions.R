@@ -83,14 +83,28 @@ markov_reduced_dimensions <- function() {
   # to the smoking cessation website
   state.costs<-array(0,dim=c(n.samples, n.states),dimnames=list(NULL,state.names))
   
+  state.costs<-data.frame(Smoking = rep(NA,times = n.samples),
+                          Not_smoking = rep(NA,times = n.samples))
+  
   # Define the treatment costs
   # One for each PSA sample and each treatment
-  # Treatment costs are actually fixed but this allows flexibility if we
-  # want to include uncertainty/randomness in the cost
+  # Treatment costs are actually fixed but this allows flexibility if we want to include uncertainty/randomness in the cost
+  
+  # Cost of the smoking cessation website is a one-off subscription fee of ?50
+  # Zero cost for standard of care
+  
+  # test with lists
+  # treatment.costs <- list()
+  # treatment.costs [["Soc with website"]] <- data.frame(Smoking = rep(50,times = n.samples),
+                                                       #Not_smoking = rep(50,times = n.samples))
+  # treatment.costs [["Soc"]] <- data.frame(Smoking = rep(0,times = n.samples),
+                                          #Not_smoking = rep(0,times = n.samples))
+  # treatment.costs [["Soc with website"]] [1, 1:2]
+  
   treatment.costs<-array(dim=c(n.treatments,n.samples),dimnames=list(treatment.names,NULL))
   
   # Cost of the smoking cessation website is a one-off subscription fee of ?50
-  treatment.costs["SoC with website",]<-50      
+  treatment.costs["SoC with website",]<-50
   # Zero cost for standard of care
   treatment.costs["SoC",]<-0
   
@@ -181,10 +195,11 @@ markov_reduced_dimensions <- function() {
       # Apply the discount factor 
       # (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
       # Each year acounts for two cycles so need to repeat the discount values
-      total.costs[i.treatment,i.sample]<-treatment.costs[i.treatment,i.sample] +
+      total.costs[i.treatment,i.sample]<-treatment.costs [[i.treatment]] [i.sample, n.treatments] +
         cycle.costs[i.treatment,i.sample,]%*%
         disc_vec
       
+      treatment.costs [[i.treatment]] [i.sample, n.treatments]
       
       # Combine the cycle.qalys to get total qalys
       # Apply the discount factor 
@@ -239,9 +254,10 @@ markov_reduced_dimensions <- function() {
   output
 }
 
+markov_reduced_dimensions()
+# ICER 746.4855 (benchmark for future changes)
+
 # Test Time for the basic function
 system.time(markov_reduced_dimensions())
 #    user  system elapsed 
 #    5.08    0.03    5.39 
-
-ICER
