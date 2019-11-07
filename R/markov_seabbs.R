@@ -15,7 +15,6 @@
 #' @export
 #' @examples 
 #' 
-#' markov_seabbs()
 markov_seabbs <- function(no_samples = 10000, duration = 100, discount = 1.035) {
 
   future::plan(future::multiprocess())

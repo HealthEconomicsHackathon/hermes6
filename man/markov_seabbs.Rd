@@ -23,5 +23,4 @@ Markov smoking model
 }
 \examples{
 
-markov_seabbs()
 }
