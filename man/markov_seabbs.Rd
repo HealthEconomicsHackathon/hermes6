@@ -7,11 +7,13 @@
 markov_seabbs(no_samples = 10000, duration = 100, discount = 1.035)
 }
 \arguments{
-\item{n.cycles}{Numeric, the number of model cycles. Defaults to 10. This is a
+\item{no_samples}{Numeric, the number of samples to take. Defaults to 10000.}
+
+\item{duration}{Numeric, the number of model cycles. Defaults to 10. This is a
 combination of time and cycle length (so 5 years with a cycle length of 6 months would give
 n.cycles).}
 
-\item{n.samples}{Numeric, the number of samples to take. Defaults to 10000.}
+\item{discount}{Numeric, defaults to 1.035. Discounting to apply to costs and qalys}
 }
 \value{
 Output

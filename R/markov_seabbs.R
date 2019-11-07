@@ -4,7 +4,6 @@
 # Load necessary libraries
 # If not installed use the following line first
 
-
 #' Markov smoking model
 #'
 #' @param duration Numeric, the number of model cycles. Defaults to 10. This is a 
