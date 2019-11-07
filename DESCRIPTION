@@ -12,7 +12,10 @@ License: What license it uses
 Encoding: UTF-8
 LazyData: true
 Imports:
-    VGAM
+    VGAM,
+    tibble,
+    dplyr,
+    purrr
 Suggests: 
     testthat (>= 2.1.0)
 Roxygen: list(markdown = TRUE)

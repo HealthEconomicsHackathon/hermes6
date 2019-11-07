@@ -2,3 +2,4 @@
 
 export(markov)
 export(markov_reduced_dimensions)
+export(markov_seabbs)
