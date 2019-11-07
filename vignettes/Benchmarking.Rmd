@@ -1,0 +1,33 @@
+---
+title: "Benchmarking"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Benchmarking}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(hermes6)
+```
+
+Comparisons of speed for different Markov Smoking Probabilistic models.
+
+Functions being tested are.
+```{r}
+function_names <- ls("package:hermes6", pattern = "markov*")
+function_names
+```
+
+```{r}
+func_calls <- lapply(function_names, function(func) call(func))
+microbenchmark::microbenchmark(list = func_calls, times = 5)
+```
+
