@@ -9,7 +9,7 @@
 #'
 #' @return Output
 #' @export
-markov_vectorisetxsmp <- function() {
+markov_parallisesmp_mclapply <- function(n.cycles = 100, n.samples = 10000) {
   set.seed(14143)
   
   # Define the number and names of treatments
@@ -23,16 +23,6 @@ markov_vectorisetxsmp <- function() {
   n.states<-2
   state.names<-c("Smoking","Not smoking")
   
-  # Define the number of cycles
-  # This is 10 as the time horizon is 5 years and cycle length is 6 months
-  # The code will work for any even n.cycles (need to change the discounting code if
-  # an odd number of cycles is desired)
-  
-  n.cycles<-100
-  
-  # Define simulation parameters
-  # This is the number of PSA samples to use
-  n.samples<-10000
   
   #############################################################################
   ## Input parameters #########################################################
@@ -149,7 +139,7 @@ markov_vectorisetxsmp <- function() {
     total.costs_tr <- total.costs[i.treatment,]
     total.qalys_tr <- total.qalys[i.treatment,]
     # Loop over the PSA samples
-    lapply(c(1:n.samples), function(i.sample){
+    parallel::mclapply(c(1:n.samples), function(i.sample){
       
       transition.matrices_tr_sample <- transition.matrices_tr[i.sample,,]
       cohort.vectors_tr_sample <- cohort.vectors_tr[i.sample,,]
