@@ -240,215 +240,99 @@ system.time(markov_reduced_dimensions())
 # 7.16    0.03    7.41
 
 
-markov_reduced_dimensions2 <- function() {
+
+
+###########################################################
+# try try
+###########################################################
+
+# Function to run the analysis based on treatment arms (scenarios)
+markov_reduced_dimensions2 <- function(scenario = "UoC") {
   
+# Define cycles and samples (simulation times)
 n.cycles<-100
 n.samples<-10000
-  
 
-# Paramatise transition matrix for all simulations
-m.notsmoke <- m.smoke <- matrix(0, nrow =  n.samples, ncol = n.cycles + 1,
-                                dimnames = list(1:n.samples, 0:n.cycles))  #initialize state matrices
-m.smoke [, 1] <- 1  # assign every proportion across the simulations to the Healthy state
-m.notsmoke [, 1] <- 0
+# function of define probabilites that depend on treatment arms
+treatment_arm <- function(treatment = "UoC") {
+  # Probabilites of remaining in certain states
+  if(treatment == "UoC") {
+    p.remain_smoke <- VGAM::rdiric(n.samples,c(88,12))[, 1]
+    cost.oneoff <-rep(0, times=n.samples)
+    }
+  if(treatment == "UoC_Web") {
+    p.remain_smoke <- VGAM::rdiric(n.samples,c(85,15))[, 1]
+    cost.oneoff <-rep(50, times=n.samples)
+    }
+  temp_list <- list("p.remain_smoke" = p.remain_smoke, "cost.oneoff" = cost.oneoff)
+  return(temp_list) 
+}
 
-# Transitions from smoking (remain)
-remain_smoke_UoC <- VGAM::rdiric(n.samples,c(88,12))[, 1]
-remain_smoke_Web <- VGAM::rdiric(n.samples,c(85,15))[, 1]
-# Transitions from not smoking (remain)
-remain_nonsmoke_UoC <-VGAM::rdiric(n.samples,c(8,92))[, 1]
-remain_nonsmoke_Web <-remain_nonsmoke_UoC
+######################################################
+# Define all variables (objects) that have 
+# uncertanties based on treatment arms
+#######################################################
+#####!!!!!!!!!!!!!!!!!!!
+p.remain_smoke <- treatment_arm (treatment = scenario) [["p.remain_smoke"]]
+cost.oneoff <- treatment_arm (treatment = scenario) [["cost.oneoff"]]
 
-# Run cycles for all simulations at once 
-for (cycle in 1:n.cycles) {
-    m.smoke[, cycle + 1] <-  m.smoke[, cycle] * remain_smoke_UoC +
-                             m.notsmoke [,cycle]* (1-remain_nonsmoke_UoC)  # calculate the prop of smoke at time t + 1
-    m.notsmoke[,cycle + 1] <-  m.notsmoke[, cycle] * remain_nonsmoke_UoC +
-                               m.smoke[, cycle]* (1-remain_smoke_UoC)
-}  
+p.remain_nonsmoke <-VGAM::rdiric(n.samples,c(8,92))[, 1] 
 
 
-
-
-
-# Define QALY and Cost
+# QALY associated with 1-year in the smoking state is Normal(mean=0.95, SD=0.01)
+# Divide by 2 as cycle length is 6 months
 qaly.smoke <-rnorm(n.samples,mean=0.95,sd=0.01)/2
 qaly.notsmoke <- rep(1/2, times=n.samples)
 
+# State Cost
 cost.smoke <-rep(0, times=n.samples)
 cost.notsmoke <- rep(0, times=n.samples)
-cost.UoC_oneoff <-rep(0, times=n.samples)
-cost.Web_oneoff <-rep(50, times=n.samples)
+
+#Discount
+disc_vec <- (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
+
+
+# Create matrices for probability of staying in each states cross each cycle (colomns) and simulations (rows)
+# Number of matrices created = number of states
+m.notsmoke <- m.smoke <- matrix(0, nrow =  n.samples, ncol = n.cycles + 1, # starts from 0 and run n.cycle, so needs n.cycle + 1 cycles
+                                dimnames = list(1:n.samples, 0:n.cycles))  #initialize state matrices
+# at cycle 0, all people start from smoking in all treatment arms, none from not-smoking (define column 0 for base population)
+# matrices for smoking state
+m.smoke [, 1] <- 1       
+# matrices for smoking state  
+m.notsmoke [, 1] <- 0
+
+
+# Run cycles for all simulations at once 
+for (cycle in 1:n.cycles) {
+    m.smoke[, cycle + 1] <-  m.smoke[, cycle] * p.remain_smoke +
+                             m.notsmoke [,cycle]* (1-p.remain_nonsmoke)  # calculate the prop of smoke at time t + 1
+    m.notsmoke[,cycle + 1] <-  m.notsmoke[, cycle] * p.remain_nonsmoke +
+                               m.smoke[, cycle]* (1-p.remain_smoke)
+}  
 
 # Distcount and Sum up
-disc_vec <- (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
-TC1 <- TE1 <- vector("numeric", length = n.samples) 
-TE1 <- (qaly.smoke * m.smoke[,-1] + qaly.notsmoke* m.notsmoke[,-1]) %*% disc_vec   # total discounted cost for all simulations
-TC1 <- (cost.smoke * m.smoke[,-1] + cost.notsmoke* m.notsmoke[,-1]) %*% disc_vec + cost.UoC_oneoff    # total discounted QALYs for all simulations
 
-# Mean of QALY and Costs
-mean(TE1)   # calculate the mean discounted QALYs
-mean(TC1)   # calculate the mean discounted costs
+TC <- TE <- vector("numeric", length = n.samples) 
+TE <- (qaly.smoke * m.smoke[,-1] + qaly.notsmoke* m.notsmoke[,-(n.cycles)]) %*% disc_vec   # total discounted cost for all simulations
+TC <- (cost.smoke * m.smoke[,-1] + cost.notsmoke* m.notsmoke[,-(n.cycles)]) %*% disc_vec + cost.oneoff    # total discounted QALYs for all simulations
 
-TE1
-return(TE1)
-
+# Mean of QALY and Costs and output
+results <- list("TE" = mean(TE), "TC" = mean(TC))
+return(results) 
 }
 
-output<-markov_reduced_dimensions2()
+# return list of results
+results_UoC <- markov_reduced_dimensions2 (scenario = "UoC")
+results_UoC_Web <- markov_reduced_dimensions2 (scenario = "UoC_Web")
+
+ICER <- (results_UoC_Web [["TC"]] - results_UoC [["TC"]]) / (results_UoC_Web [["TE"]] - results_UoC [["TE"]])
+
 
 system.time(markov_reduced_dimensions2()) 
 
+#    user  system elapsed 
+#    0.1     0.0     0.1
 
 
-
-
-
-markov_reduced_dimensions3 <- function() {
-  
-  n.cycles<-100
-  n.samples<-10000
-  
-  m.notsmoke <- m.smoke <- matrix(0, nrow =  n.samples, ncol = n.cycles + 1,
-                                  dimnames = list(1:n.samples, 0:n.cycles))  #initialize state matrices
-  m.smoke [, 1] <- 1  # assign every proportion across the simulations to the Healthy state
-  m.notsmoke [, 1] <- 0
-  
-  # Transitions from smoking (remain)
-  remain_smoke_UoC <- VGAM::rdiric(n.samples,c(88,12))[, 1]
-  remain_smoke_Web <- VGAM::rdiric(n.samples,c(85,15))[, 1]
-  # Transitions from not smoking (remain)
-  remain_nonsmoke_UoC <-VGAM::rdiric(n.samples,c(8,92))[, 1]
-  remain_nonsmoke_Web <-remain_nonsmoke_UoC
-  
-  for (cycle in 1:n.cycles) {
-    m.smoke[, cycle + 1] <-  m.smoke[, cycle] * remain_smoke_Web +
-      m.notsmoke [,cycle]* (1-remain_nonsmoke_Web)  # calculate the prop of smoke at time t + 1
-    m.notsmoke[,cycle + 1] <-  m.notsmoke[, cycle] * remain_nonsmoke_Web +
-      m.smoke[, cycle]* (1-remain_smoke_Web)
-  }  
-  
-  disc_vec <- (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
-  
-  # QALY associated with 1-year in the smoking state is Normal(mean=0.95, SD=0.01)
-  # Divide by 2 as cycle length is 6 months
-  qaly.smoke <-rnorm(n.samples,mean=0.95,sd=0.01)/2
-  qaly.notsmoke <- rep(1/2, times=n.samples)
-  
-  cost.smoke <-rep(0, times=n.samples)
-  cost.notsmoke <- rep(0, times=n.samples)
-  cost.UoC_oneoff <-rep(0, times=n.samples)
-  cost.Web_oneoff <-rep(50, times=n.samples)
-  
-  
-  TC1 <- TE1 <- vector("numeric", length = n.samples) 
-  TE1 <- (qaly.smoke * m.smoke[,-1] + qaly.notsmoke* m.notsmoke[,-1]) %*% disc_vec   # total discounted cost for all simulations
-  TC1 <- (cost.smoke * m.smoke[,-1] + cost.notsmoke* m.notsmoke[,-1]) %*% disc_vec + cost.Web_oneoff # total discounted QALYs for all simulations
-  
-  mean(TE1)   # calculate the mean discounted QALYs
-  mean(TC1)   # calculate the mean discounted costs
-  
-}
-  
-  n.treatments<-2
-  n.states<-2
-  n.cycles<-100
-  n.samples<-10000
-  
-  
-  m.notsmoke <- m.smoke <- matrix(0, nrow =  n.samples, ncol = n.cycles + 1,
-                                  dimnames = list(1:n.samples, 0:n.cycles))  #initialize state matrices
-  m.smoke [, 1] <- 1  # assign every proportion across the simulations to the Healthy state
-  m.notsmoke [, 1] <- 0
-  
-  # Transitions from smoking (remain)
-  remain_smoke_UoC <- VGAM::rdiric(n.samples,c(88,12))[, 1]
-  remain_smoke_Web <- VGAM::rdiric(n.samples,c(85,15))[, 1]
-  # Transitions from not smoking (remain)
-  remain_nonsmoke_UoC <-VGAM::rdiric(n.samples,c(8,92))[, 1]
-  remain_nonsmoke_Web <-remain_nonsmoke_UoC
-  
-  for (cycle in 1:n.cycles) {
-    m.smoke[, cycle + 1] <-  m.smoke[, cycle] * remain_smoke_UoC +
-      m.notsmoke [,cycle]* (1-remain_nonsmoke_UoC)  # calculate the prop of smoke at time t + 1
-    m.notsmoke[,cycle + 1] <-  m.notsmoke[, cycle] * remain_nonsmoke_UoC +
-      m.smoke[, cycle]* (1-remain_smoke_UoC)
-  }  
-  
-  disc_vec <- (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
-  
-  # QALY associated with 1-year in the smoking state is Normal(mean=0.95, SD=0.01)
-  # Divide by 2 as cycle length is 6 months
-  qaly.smoke <-rnorm(n.samples,mean=0.95,sd=0.01)/2
-  qaly.notsmoke <- rep(1/2, times=n.samples)
-  
-  cost.smoke <-rep(0, times=n.samples)
-  cost.smoke_oneoff <-rep(50, times=n.samples)
-  cost.notsmoke <- rep(0, times=n.samples)
-  
-  TC1 <- TE1 <- vector("numeric", length = n.samples) 
-  TE1 <- (qaly.smoke * m.smoke[,-1] + qaly.notsmoke* m.notsmoke[,-1]) %*% disc_vec   # total discounted cost for all simulations
-  TC1 <- (cost.smoke * m.smoke[,-1] + cost.notsmoke* m.notsmoke[,-1]) %*% disc_vec    # total discounted QALYs for all simulations
-  
-  mean(TE1)   # calculate the mean discounted QALYs
-  mean(TC1)   # calculate the mean discounted costs
-  
-}
-  
-system.time(markov_reduced_dimensions2()) 
-  
-  
-  
-  
-  
-
-# Define the number and names of treatments
-# These are Standard of Care with website
-# and Standard of Care without website
-n.treatments<-2
-treatment.names<-c("SoC with website","SoC")
-
-# Define the number and names of states of the model
-# This is two and they are "Smoking" and "Not smoking"
-n.states<-2
-state.names<-c("Smoking","Not smoking")
-
-# Define the number of cycles
-# This is 10 as the time horizon is 5 years and cycle length is 6 months
-# The code will work for any even n.cycles (need to change the discounting code if
-# an odd number of cycles is desired)
-
-n.cycles<-100
-
-# Define simulation parameters
-# This is the number of PSA samples to use
-n.samples<-2
-
-#############################################################################
-## Input parameters #########################################################
-#############################################################################
-
-# The transition matrix is a 2x2 matrix
-# Rows sum to 1
-# Top left entry is transition probability from smoking to smoking
-# Top right is transition probability from smoking to not smoking
-# Bottom left is transition probability from not smoking to smoking
-# Bottom right is transition probability from not smoking to not smoking
-
-# There is one transition matrix for each reatment option and each PSA sample
-# Store them in an array with (before filling in below) NA entries
-transition.matrices<-array(dim=c(n.treatments,n.samples,n.states,n.states),
-                           dimnames=list(treatment.names,NULL,state.names,state.names))
-
-# First the transition matrix for Standard of Care with website
-
-# Transitions from not smoking
-transition.matrices["SoC with website",,"Not smoking",]<-VGAM::rdiric(n.samples,c(8,92))
-
-# Second the transition matrix for Standard of Care
-
-# Transitions from not smoking
-# These should be the same as the transition probabilities from not smoking for SoC with website
-# as the website has no impact on probability of relapse
-transition.matrices["SoC",,"Not smoking",]<-transition.matrices["SoC with website",,"Not smoking",]
 
