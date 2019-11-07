@@ -16,11 +16,15 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(hermes6)
+library(tibble)
+library(magrittr)
 ```
 
 Comparisons of speed for different Markov Smoking Probabilistic models.
 
 Functions being tested are.
+Creates list of functions where the name starts with markov. All top level functions should start with this.
+
 ```{r}
 function_names <- ls("package:hermes6", pattern = "markov*")
 function_names
@@ -28,9 +32,25 @@ function_names
 
 ```{r}
 func_calls <- lapply(function_names, function(func) call(func))
-microbenchmark::microbenchmark(list = func_calls, times = 5)
 ```
 
+```{r}
+output <- lapply(function_names, function(func) {
+  func_call <- call(func)
+  print(func_call)
+  out <- system.time(eval(func_call))
+  print(out)
+  out["elapsed"]
+})
+names(output) <- function_names
 ```
 
+Benchmarking
+```{r}
+output_df <- output %>% 
+  unlist(recursive = FALSE) %>% 
+  enframe() 
+output_df
 ```
+
+
