@@ -194,12 +194,13 @@ run_markov <- function(transition = NULL, cohort = NULL, state_cost = NULL,
   total_costs_cycle <- (sim %*% state_cost) * discounting
   
   ##Total QALYs per cycle
-  total_qalys <- (sim %*% qalys) * discounting
+  discounted_qalys <- (sim %*% qalys) * discounting
+  total_qalys <- sum(discounted_qalys)
   
   ## Overall costs
-  total_costs <- total_costs_cycle + intervention_cost
+  total_costs <- sum(total_costs_cycle) + intervention_cost
   
-  out <- tibble::tibble(total_costs = list(total_costs), total_qalys = list(total_qalys))
+  out <- tibble::tibble(total_costs = total_costs, total_qalys = total_qalys)
   
   return(out)
 }
@@ -214,11 +215,52 @@ test_sim <- run_markov(transition = test_sample$transition[[1]],
                        discount = 1.035)
 
 
+
+
+# Analyse samples --------------------------------------------------------
+
+analyse_model <- function(results) {
+  
+  results %>% 
+    dplyr::group_by(intervention) %>% 
+    dplyr::summarise(
+      mean_costs = mean(total_costs),
+      mean_qalys = mean(total_qalys)
+    ) %>% 
+    dplyr::ungroup()
+}
+
+
+# Generate samples --------------------------------------------------------
+
+no_samples <- 1000
+duration <- 100
+discount <- 1.035
+
+samples <- purrr::map_dfr(1:no_samples, ~ single_sample(transitions = transitions_list,
+                                                               state_costs = state_costs,
+                                                               intervention_costs = intervention_costs,
+                                                               cohorts = cohorts, qalys = qalys), .id = "sample")
+
+results <- purrr::map_dfr(1:nrow(samples), 
+                          ~ run_markov(transition = samples$transition[[.]],
+                                       cohort = samples$cohort[[.]],
+                                       state_cost = samples$state_cost[[.]], 
+                                       intervention_cost = samples$intervention_cost[[.]], 
+                                       qalys = samples$qalys[[.]], 
+                                       duration = duration,
+                                       discount = discount))
+
+combined <- dplyr::bind_cols(samples, results)
+
 # Analyse model -----------------------------------------------------------
 
-analyse_model <- function() {
+sum <- analyse_model(combined)
   
-}
+  #total costs = a matrix of interventions by samples
+  #total qalys is the same
+  #incremental qalys is the difference between the two qalys
+  #incremental costs is same
 
 # Smoking Cessation Markov model
 # Howard Thom 14-June-2019
@@ -237,49 +279,6 @@ analyse_model <- function() {
 #' @export
 #'
 markov_seabbs <- function(n.cycles = 100, n.samples = 10000) {
-  set.seed(14143)
-  
 
-  #############################################################################
-  ## Analysis of results ######################################################
-  #############################################################################
-  output <- list()
-  # Average costs
-  # These are ?50 on the website and 0 on standard of care as there are no
-  # costs other than the website subscription cost
-  output$average.costs<-rowMeans(total.costs)
-  # Average effects (in QALY units)
-  # These are slightly higher on the website as higher probability of 
-  # quitting smoking
-  output$average.effects<-rowMeans(total.qalys)
-  
-  # Incremental costs and effects relative to standard of care
-  # No uncertainty in the costs as the website cost is fixed at ?50
-  output$incremental.costs<-total.costs["SoC with website",]-total.costs["SoC",]
-  # In some samples the website leads to higher QALYs but in others it is negative
-  # There is uncertainty as to whether the website is an improvement over SoC
-  output$incremental.effects<-total.qalys["SoC with website",]-total.qalys["SoC",]
-  
-  # The ICER comparing Standard of care with website to standard of care
-  # This is much lower than the ?20,000 willingness-to-pay threshold indicating
-  # good value for money
-  output$ICER<-mean(output$incremental.costs)/mean(output$incremental.effects)
-  
-  # Incremental net benefit at the ?20,000 willingness-to-pay
-  # Sometimes positive (website more cost-effective) and sometimes negative (SoC more cost-effective)
-  # Need to look at averages and consider probabilities of cost-effectiveness
-  output$incremental.net.benefit<-20000*output$incremental.effects-output$incremental.costs
-  
-  # Average incremental net benefit
-  # This is positive indicating cost-effectiveness at the ?20,000 threshold
-  output$average.inb<-mean(output$incremental.net.benefit)
-  
-  # Probability cost-effective
-  # This is the proportion of samples for which the incremental net benefit is positive
-  # It is clost to 72%, representing good degree of certainty
-  # in recommendation to adopt the smoking cessation website
-  output$probability.cost.effective<-sum(output$incremental.net.benefit>0)/n.samples
-  
-  # Now use the BCEA package to analyse the results...
-  output
+
 }
