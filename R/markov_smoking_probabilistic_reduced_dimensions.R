@@ -71,7 +71,7 @@ markov_reduced_dimensions <- function() {
   
   # QALY associated with 1-year in the smoking state is Normal(mean=0.95, SD=0.01)
   # Divide by 2 as cycle length is 6 months
-  state.qalys[,"Smoking"]<-rnorm(n.samples,mean=0.95,sd=0.01)/2
+  state.qalys[,"Smoking"]<-stats::rnorm(n.samples,mean=0.95,sd=0.01)/2
   
   # QALY associated with 1-year in the not smoking state is 1 (no uncertainty)
   # So all PSA samples have the same value
@@ -83,24 +83,10 @@ markov_reduced_dimensions <- function() {
   # to the smoking cessation website
   state.costs<-array(0,dim=c(n.samples, n.states),dimnames=list(NULL,state.names))
   
-  state.costs<-data.frame(Smoking = rep(NA,times = n.samples),
-                          Not_smoking = rep(NA,times = n.samples))
-  
   # Define the treatment costs
   # One for each PSA sample and each treatment
-  # Treatment costs are actually fixed but this allows flexibility if we want to include uncertainty/randomness in the cost
-  
-  # Cost of the smoking cessation website is a one-off subscription fee of ?50
-  # Zero cost for standard of care
-  
-  # test with lists
-  # treatment.costs <- list()
-  # treatment.costs [["Soc with website"]] <- data.frame(Smoking = rep(50,times = n.samples),
-                                                       #Not_smoking = rep(50,times = n.samples))
-  # treatment.costs [["Soc"]] <- data.frame(Smoking = rep(0,times = n.samples),
-                                          #Not_smoking = rep(0,times = n.samples))
-  # treatment.costs [["Soc with website"]] [1, 1:2]
-  
+  # Treatment costs are actually fixed but this allows flexibility if we
+  # want to include uncertainty/randomness in the cost
   treatment.costs<-array(dim=c(n.treatments,n.samples),dimnames=list(treatment.names,NULL))
   
   # Cost of the smoking cessation website is a one-off subscription fee of ?50
@@ -108,11 +94,6 @@ markov_reduced_dimensions <- function() {
   # Zero cost for standard of care
   treatment.costs["SoC",]<-0
   
-  # In this example, state cost is 0 (no treatment) and treatment.cost is artificially decided, so costs remain the same in all n.sample (simulation)
-  # We might be able to speed up if removing array and using single matrix, but preserving this function can let the model be more flexible for future change
-  
-  
-
   #############################################################################
   ## Simulation ###############################################################
   #############################################################################
@@ -188,18 +169,14 @@ markov_reduced_dimensions <- function() {
       # And total QALYs for each cycle
       cycle.qalys[i.treatment,i.sample,]<-
         cohort.vectors_tr_sample%*%state.qalys[i.sample,]
-      # a comment that is irrelvant to speed up --> even if sd 0.01 is quite small, 
-      # using rnorm is suggesting that there is a potentiality of utility > 1, this should be capped at 1
       
       # Combine the cycle.costs and treatment.costs to get total costs
       # Apply the discount factor 
       # (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
       # Each year acounts for two cycles so need to repeat the discount values
-      total.costs[i.treatment,i.sample]<-treatment.costs [[i.treatment]] [i.sample, n.treatments] +
+      total.costs[i.treatment,i.sample]<-treatment.costs[i.treatment,i.sample] +
         cycle.costs[i.treatment,i.sample,]%*%
         disc_vec
-      
-      treatment.costs [[i.treatment]] [i.sample, n.treatments]
       
       # Combine the cycle.qalys to get total qalys
       # Apply the discount factor 
@@ -253,14 +230,14 @@ markov_reduced_dimensions <- function() {
   # Now use the BCEA package to analyse the results...
   output
 }
-
 markov_reduced_dimensions()
 # ICER 746.4855 (benchmark for future changes)
 
 # Test Time for the basic function
 system.time(markov_reduced_dimensions())
-#    user  system elapsed 
-#    5.08    0.03    5.39 
+#  
+# user  system elapsed 
+# 7.16    0.03    7.41
 
 
 markov_reduced_dimensions2 <- function() {
@@ -289,6 +266,9 @@ for (cycle in 1:n.cycles) {
     m.notsmoke[,cycle + 1] <-  m.notsmoke[, cycle] * remain_nonsmoke_UoC +
                                m.smoke[, cycle]* (1-remain_smoke_UoC)
 }  
+
+
+
 
 
 # Define QALY and Cost
