@@ -4,7 +4,7 @@ language: R
 cache: packages
 
 after success:
-  - make website
+  - Rscript -e 'pkgdown::build_site()'
 
 deploy:
   provider: pages
@@ -14,3 +14,4 @@ deploy:
   local-dir: docs
   on:
     branch: master
+  
