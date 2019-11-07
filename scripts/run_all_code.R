@@ -3,7 +3,7 @@
 # but the tests there are run multiple times to derive an average and takes longer to run.
 
 # To run this it needs to be created as a package locally. Note that if the entire script is 
-# selected to run it will stop at the restart.
+# selected to run it will stop at the restartR() line of code.
 
 # Install packages if not already installed.
 
@@ -15,13 +15,13 @@ if (!require("tidyverse")) install.packages("tidyverse")
 
 .rs.restartR()
 
-# Load package
+# Load packages
 
 library(hermes6)
 library(tidyverse)
 
 # Creates list of functions where the name starts with markov. All top level functions should
-# start with this but notes are needed for Vignette to ensure any no confusing results.
+# start with this. 
 
 function_names <- ls("package:hermes6", pattern = "markov*")
 
