@@ -8,6 +8,10 @@
 # If not installed use the following line first
 # install.packages("VGAM")
 
+
+#'
+#'rcpp_loop
+#'@keywords internal
 Rcpp::cppFunction('NumericMatrix rcpp_loop(NumericMatrix mat_in, NumericMatrix transition, int n) {
 NumericMatrix out(mat_in.nrow(), transition.ncol());
 out(0, _) = mat_in(0, _);
@@ -222,3 +226,8 @@ markov_expanded_lapply_rcpp <- function(){
   # Now use the BCEA package to analyse the results...
   output
 }
+
+
+system.time(markov_expanded_lapply_rcpp())
+output <- markov_expanded_lapply_rcpp()
+output$probability.cost.effective
