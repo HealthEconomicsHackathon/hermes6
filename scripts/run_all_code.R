@@ -5,8 +5,9 @@
 # To run this it needs to be created as a package locally. Note that if the entire script is 
 # selected to run it will stop at the restart.
 
-# These lines 
-if (!require("hermes6")) install.packages(".", repos = NULL, type="source")
+# Install packages if not already installed.
+
+if (!require("hermes6")) install.packages(".", repos = NULL, type = "source")
 if (!require("tidyverse")) install.packages("tidyverse")
 
 # Restart your R session manually by going to Session and then Restart R but this code
