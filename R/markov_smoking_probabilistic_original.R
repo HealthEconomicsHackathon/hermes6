@@ -176,6 +176,18 @@ markov <- function() {
     }
   }
   
+  # Try parallel processing
+  # allarms = c(1,2)
+  # system.time({
+  #  cl <- makeCluster(2) 
+  #  clusterExport(cl=cl, c('n.samples', 'transition.matrices', 'n.cycles','cohort.vectors',
+  #                         'cycle.costs','cycle.qalys','total.costs','total.qalys',
+  #                         'state.costs', 'state.qalys', 'treatment.costs','prespec.discount'))
+  #  parLapply(cl, allarms, FxPSA)
+  #  
+  #  # one or more parLapply calls
+  #  stopCluster(cl)
+  #})
   #############################################################################
   ## Analysis of results ######################################################
   #############################################################################
