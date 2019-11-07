@@ -11,7 +11,7 @@
 #'
 #' @return Output
 #' @export
-markov_reduced_dimensions <- function() {
+markov_expanded <- function() {
   set.seed(14143)
   
   # Define the number and names of treatments
@@ -34,7 +34,7 @@ markov_reduced_dimensions <- function() {
   
   # Define simulation parameters
   # This is the number of PSA samples to use
-  n.samples<-1000
+  n.samples<-10000
   
   #############################################################################
   ## Input parameters #########################################################
@@ -230,3 +230,4 @@ markov_reduced_dimensions <- function() {
   output
 }
 
+system.time(output<-markov_expanded())
