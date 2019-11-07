@@ -21,3 +21,7 @@ Output
 \description{
 Markov smoking model
 }
+\examples{
+
+markov_seabbs()
+}

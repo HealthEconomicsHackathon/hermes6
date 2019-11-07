@@ -13,7 +13,10 @@
 #' @param discount Numeric, defaults to 1.035. Discounting to apply to costs and qalys
 #' @return Output
 #' @export
-#'
+#' 
+#' @examples 
+#' 
+#' markov_seabbs()
 markov_seabbs <- function(no_samples = 10000, duration = 100, discount = 1.035) {
 
   future::plan(multiprocess)
@@ -94,7 +97,6 @@ markov_seabbs <- function(no_samples = 10000, duration = 100, discount = 1.035) 
   }
   
  # intervention_costs()
-  
   
   state_costs <- function(samples = 1) {
     state_cost <- function(samples = 1) {
