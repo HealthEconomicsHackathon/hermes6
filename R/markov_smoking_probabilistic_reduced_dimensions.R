@@ -4,7 +4,7 @@
 # Load necessary libraries
 # If not installed use the following line first
 # install.packages("VGAM")
-
+ 
 #' Reduced dimensions in markov smoking probabilistic model
 #'
 #' @return Output
@@ -61,7 +61,7 @@ markov_reduced_dimensions <- function(n.cycles = 100, n.samples = 10000) {
   
   # QALY associated with 1-year in the smoking state is Normal(mean=0.95, SD=0.01)
   # Divide by 2 as cycle length is 6 months
-  state.qalys[,"Smoking"]<-rnorm(n.samples,mean=0.95,sd=0.01)/2
+  state.qalys[,"Smoking"]<-stats::rnorm(n.samples,mean=0.95,sd=0.01)/2
   
   # QALY associated with 1-year in the not smoking state is 1 (no uncertainty)
   # So all PSA samples have the same value

@@ -1,16 +1,17 @@
 # Smoking Cessation Markov model
 # Howard Thom 14-June-2019
 
+# Edited 7-November-2019 to use 10 health states instead of 2.
+
 # Load necessary libraries
 # If not installed use the following line first
-
-
-#' Markov smoking model
+# install.packages("VGAM")
+ 
+#' Reduced dimensions in markov smoking probabilistic model
 #'
 #' @return Output
 #' @export
-#'
-markov <- function(n.cycles = 100, n.samples = 10000) {
+markov_expanded <- function() {
   set.seed(14143)
   
   # Define the number and names of treatments
@@ -20,10 +21,20 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
   treatment.names<-c("SoC with website","SoC")
   
   # Define the number and names of states of the model
-  # This is two and they are "Smoking" and "Not smoking"
-  n.states<-2
-  state.names<-c("Smoking","Not smoking")
+  # Any number is allowed and states are named "State 1", "State 2", etc.
+  n.states<-10
+  state.names<-paste("State",c(1:n.states))
   
+  # Define the number of cycles
+  # This is 10 as the time horizon is 5 years and cycle length is 6 months
+  # The code will work for any even n.cycles (need to change the discounting code if
+  # an odd number of cycles is desired)
+  
+  n.cycles<-100
+  
+  # Define simulation parameters
+  # This is the number of PSA samples to use
+  n.samples<-25000
   
   #############################################################################
   ## Input parameters #########################################################
@@ -41,38 +52,36 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
   transition.matrices<-array(dim=c(n.treatments,n.samples,n.states,n.states),
                              dimnames=list(treatment.names,NULL,state.names,state.names))
   
-  # First the transition matrix for Standard of Care with website
-  # Transitions from smoking 
-  transition.matrices["SoC with website",,"Smoking",]<-VGAM::rdiric(n.samples,c(85,15))
-  # Transitions from not smoking
-  transition.matrices["SoC with website",,"Not smoking",]<-VGAM::rdiric(n.samples,c(8,92))
-  
-  # Second the transition matrix for Standard of Care
-  # Transitions from smoking 
-  transition.matrices["SoC",,"Smoking",]<-VGAM::rdiric(n.samples,c(88,12))
-  # Transitions from not smoking
-  # These should be the same as the transition probabilities from not smoking for SoC with website
-  # as the website has no impact on probability of relapse
-  transition.matrices["SoC",,"Not smoking",]<-transition.matrices["SoC with website",,"Not smoking",]
-  
   # Now define the QALYS associated with the states per cycle
   # There is one for each PSA sample and each state
   # Store in an NA array and then fill in below
   state.qalys<-array(dim=c(n.samples, n.states),dimnames=list(NULL,state.names))
   
-  # QALY associated with 1-year in the smoking state is Normal(mean=0.95, SD=0.01)
-  # Divide by 2 as cycle length is 6 months
-  state.qalys[,"Smoking"]<-stats::rnorm(n.samples,mean=0.95,sd=0.01)/2
-  
-  # QALY associated with 1-year in the not smoking state is 1 (no uncertainty)
-  # So all PSA samples have the same value
-  # Again divide by 2 as cycle length is 6 months
-  state.qalys[,"Not smoking"]<-1/2
-  
   # And finally define the state costs
-  # These are all zero as the only cost is a one-off subscription fee of ?50
-  # to the smoking cessation website
-  state.costs<-array(0,dim=c(n.samples, n.states),dimnames=list(NULL,state.names))
+  # There is one for each PSA sample and each state
+  # Store in an NA array and then fill in below
+  state.costs<-array(dim=c(n.samples, n.states),dimnames=list(NULL,state.names))
+  
+  
+  # Define transition matrices, state utilities and costs 
+  for(i.state in 1:n.states)
+  {
+    # Use dirichlet distributions to define transition matrices
+    # This is for illustration only; in practice this would be estimated on some data
+    transition.matrices["SoC",,paste("State",c(i.state)),]<-VGAM::rdiric(n.samples,sample(c(50:100),n.states))
+    transition.matrices["SoC with website",,paste("State",i.state),]<-VGAM::rdiric(n.samples,sample(c(50:100),n.states))
+    
+    # State utilities
+    # Anything between 0 and 1
+    # Divide by 2 as cycle length is 6 months
+    state.qalys[,paste("State",i.state)]<-runif(n.samples,min=0,max=1)/2
+    
+    # State costs
+    # Assumed normal with sd small enough to avoid negative values
+    state.costs[,paste("State",i.state)]<-rnorm(n.samples,mean=100,sd=10)
+    
+  }
+  
   
   # Define the treatment costs
   # One for each PSA sample and each treatment
@@ -90,15 +99,14 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
   #############################################################################
   
   # Build an array to store the cohort vector at each cycle
-  # Each cohort vector has 2 (=n.states) elements: probability of being in smoking state,
-  # and probability of being in the not smoking state
+  # Each cohort vector has n.states elements: probability of being in each state,
   # There is one cohort vector for each treatment, for each PSA sample, for each cycle.
   cohort.vectors<-array(dim=c(n.treatments,n.samples,n.cycles,n.states),
                         dimnames=list(treatment.names,NULL,NULL,state.names))
   
-  # Assume that everyone starts in the smoking state no matter the treatment
-  cohort.vectors[,,1,"Smoking"]<-1
-  cohort.vectors[,,1,"Not smoking"]<-0
+  # Assume that everyone starts in first state
+  cohort.vectors[,,1,"State 1"]<-1
+  cohort.vectors[,,1,paste("State",c(2:10))]<-0
   
   # Build an array to store the costs and QALYs accrued per cycle
   # One for each treatment, for each PSA sample, for each cycle
@@ -118,16 +126,27 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
   total.qalys<-array(dim=c(n.treatments,n.samples),
                      dimnames=list(treatment.names,NULL))
   
+  #i.treatment <- 1
+  #i.sample <- 1
+  #i.cycle <- 2
+  
+  disc_vec <- (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
   
   # The remainder of the cohort.vectors will be filled in by Markov updating below
   
   # Main model code
   # Loop over the treatment options
+  
   for(i.treatment in 1:n.treatments)
   {
+    transition.matrices_tr <- transition.matrices[i.treatment,,,]
+    
     # Loop over the PSA samples
     for(i.sample in 1:n.samples)
     {
+      
+      transition.matrices_tr_sample <- transition.matrices_tr[i.sample,,]
+      
       # Loop over the cycles
       # Cycle 1 is already defined so only need to update cycles 2:n.cycles
       for(i.cycle in 2:n.cycles)
@@ -135,33 +154,35 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
         # Markov update
         # Multiply previous cycle's cohort vector by transition matrix
         # i.e. pi_j = pi_(j-1)*P
-        cohort.vectors[i.treatment,i.sample,i.cycle,]<-
-          cohort.vectors[i.treatment,i.sample,i.cycle-1,]%*%
-          transition.matrices[i.treatment,i.sample,,]
+        cohort.vectors[i.treatment, i.sample,i.cycle,]<-
+          cohort.vectors[i.treatment, i.sample,i.cycle-1,] %*%
+          transition.matrices_tr_sample
       }
+      
+      cohort.vectors_tr_sample <- cohort.vectors[i.treatment,i.sample,,]
       
       # Now use the cohort vectors to calculate the 
       # total costs for each cycle
       cycle.costs[i.treatment,i.sample,]<-
-        cohort.vectors[i.treatment,i.sample,,]%*%state.costs[i.sample,]
+        cohort.vectors_tr_sample%*%state.costs[i.sample,]
       # And total QALYs for each cycle
       cycle.qalys[i.treatment,i.sample,]<-
-        cohort.vectors[i.treatment,i.sample,,]%*%state.qalys[i.sample,]
+        cohort.vectors_tr_sample%*%state.qalys[i.sample,]
       
       # Combine the cycle.costs and treatment.costs to get total costs
       # Apply the discount factor 
       # (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
       # Each year acounts for two cycles so need to repeat the discount values
-      total.costs[i.treatment,i.sample]<-treatment.costs[i.treatment,i.sample]+
+      total.costs[i.treatment,i.sample]<-treatment.costs[i.treatment,i.sample] +
         cycle.costs[i.treatment,i.sample,]%*%
-        (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
+        disc_vec
       
       # Combine the cycle.qalys to get total qalys
       # Apply the discount factor 
       # (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
       # Each year acounts for two cycles so need to repeat the discount values
       total.qalys[i.treatment,i.sample]<-cycle.qalys[i.treatment,i.sample,]%*%
-        (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
+        disc_vec
     }
   }
   
@@ -208,3 +229,4 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
   # Now use the BCEA package to analyse the results...
   output
 }
+
