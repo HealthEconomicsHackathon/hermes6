@@ -9,7 +9,7 @@
 #'
 #' @return Output
 #' @export
-markov_vectorisesmp <- function(n.states = 2, n.cycles = 100, n.samples = 10000) {
+markov_expanded_vectorisesmp <- function(n.states = 2, n.cycles = 100, n.samples = 10000) {
     set.seed(14143)
     
     # Define the number and names of treatments
