@@ -10,7 +10,7 @@
 #' @return Output
 #' @export
 #'
-markov <- function() {
+markov <- function(){
   set.seed(14143)
   
   # Define the number and names of treatments
@@ -133,25 +133,28 @@ markov <- function() {
   # The remainder of the cohort.vectors will be filled in by Markov updating below
 
   # Main model code
-  # Loop over the treatment options
-  for(i.treatment in 1:n.treatments)
-  {
-    # Loop over the PSA samples
+  
+  # Create a treatment-dependent function
+  temparm.costs<-array(dim=c(n.samples))
+  temparm.qalys<-array(dim=c(n.samples))
+  
+  # Loop over the PSA samples
+  FxPSA <- function(i.treatment){
     for(i.sample in 1:n.samples)
-    {
+      {
       # Prespecify the transition matrices
       prespec.transmat <- transition.matrices[i.treatment,i.sample,,]
       
       # Loop over the cycles
       # Cycle 1 is already defined so only need to update cycles 2:n.cycles
       for(i.cycle in 2:n.cycles)
-      {
+        {
         # Markov update
         # Multiply previous cycle's cohort vector by transition matrix
         # i.e. pi_j = pi_(j-1)*P
         cohort.vectors[i.treatment,i.sample,i.cycle,]<-
           cohort.vectors[i.treatment,i.sample,i.cycle-1,]%*%prespec.transmat
-      }
+        }
       
       # Now use the cohort vectors to calculate the 
       # total costs for each cycle
@@ -165,29 +168,35 @@ markov <- function() {
       # Apply the discount factor 
       # (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
       # Each year acounts for two cycles so need to repeat the discount values
-      total.costs[i.treatment,i.sample]<-treatment.costs[i.treatment,i.sample]+
+      temparm.costs[i.sample]<-treatment.costs[i.treatment,i.sample]+
         cycle.costs[i.treatment,i.sample,]%*%prespec.discount
       
       # Combine the cycle.qalys to get total qalys
       # Apply the discount factor 
       # (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
       # Each year acounts for two cycles so need to repeat the discount values
-      total.qalys[i.treatment,i.sample]<-cycle.qalys[i.treatment,i.sample,]%*%prespec.discount
+      temparm.qalys[i.sample]<-cycle.qalys[i.treatment,i.sample,]%*%prespec.discount
+      }
+    total.list <- list(temparm.costs,temparm.qalys)
+    return(total.list)
     }
-  }
   
-  # Try parallel processing
-  # allarms = c(1,2)
-  # system.time({
-  #  cl <- makeCluster(2) 
-  #  clusterExport(cl=cl, c('n.samples', 'transition.matrices', 'n.cycles','cohort.vectors',
-  #                         'cycle.costs','cycle.qalys','total.costs','total.qalys',
-  #                         'state.costs', 'state.qalys', 'treatment.costs','prespec.discount'))
-  #  parLapply(cl, allarms, FxPSA)
-  #  
-  #  # one or more parLapply calls
-  #  stopCluster(cl)
-  #})
+  # Run parallel processing
+  library(parallel)
+  cl <- makeCluster(2) # better than cluser = 4
+  clusterExport(cl=cl, c('n.samples', 'transition.matrices', 'n.cycles','cohort.vectors',
+                         'cycle.costs','cycle.qalys','temparm.costs','temparm.qalys',
+                         'state.costs', 'state.qalys', 'treatment.costs','prespec.discount'))
+  treatarms <- list(arm1=1, arm2=2)
+  treatoutputs <- parLapply(cl, treatarms, FxPSA)
+  stopCluster(cl)
+  
+  # Save parallel results back to the arrays for output analysis
+  total.costs[1,] <- treatoutputs$arm1[[1]]
+  total.costs[2,] <- treatoutputs$arm2[[1]]
+  total.qalys[1,] <- treatoutputs$arm1[[2]]
+  total.qalys[2,] <- treatoutputs$arm2[[2]]
+  
   #############################################################################
   ## Analysis of results ######################################################
   #############################################################################
@@ -231,3 +240,4 @@ markov <- function() {
   # Now use the BCEA package to analyse the results...
   output
 }
+
