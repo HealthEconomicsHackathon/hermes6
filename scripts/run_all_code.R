@@ -9,6 +9,14 @@
 
 if (!require("hermes6")) install.packages(".", repos = NULL, type = "source")
 if (!require("tidyverse")) install.packages("tidyverse")
+#Dependency for foreach is also installed with doParallel
+if (!require("doParallel")) install.packages("doParallel")
+if (!require("furrr")) install.packages("furrr")
+
+if (!require("devtools")) install.packages("devtools")
+
+library(devtools)
+install_github('nathanvan/parallelsugar')
 
 # Restart your R session manually by going to Session and then Restart R but this code
 # will do that.
@@ -19,6 +27,10 @@ if (!require("tidyverse")) install.packages("tidyverse")
 
 library(hermes6)
 library(tidyverse)
+library(doParallel)
+library(foreach)
+library(furrr)
+library(parallelsugar)
 
 # Creates list of functions where the name starts with markov. All top level functions should
 # start with this. 
