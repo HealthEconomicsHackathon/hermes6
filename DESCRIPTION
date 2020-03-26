@@ -14,7 +14,8 @@ LazyData: true
 Imports:
     tibble,
     magrittr,
-    VGAM
+    VGAM,
+    Rcpp
 Suggests: 
     testthat (>= 2.1.0),
     knitr,
