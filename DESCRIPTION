@@ -16,7 +16,8 @@ Imports:
     magrittr,
     VGAM,
     Rcpp,
-    tidyverse
+    tidyverse, 
+    furrr
 Suggests: 
     testthat (>= 2.1.0),
     knitr,
