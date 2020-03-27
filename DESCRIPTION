@@ -17,7 +17,8 @@ Imports:
     VGAM,
     Rcpp,
     tidyverse, 
-    furrr
+    furrr,
+    parallelsugar
 Suggests: 
     testthat (>= 2.1.0),
     knitr,
