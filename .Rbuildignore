@@ -6,3 +6,7 @@
 ^docs$
 ^pkgdown$
 ^\.travis\.yml$
+^Dockerfile$
+^Makefile$
+^binder$
+^scripts$
