@@ -20,7 +20,7 @@ Imports:
     tidyverse, 
     furrr,
     parallelsugar
-Suggests: 
+Suggests:
     testthat (>= 2.1.0),
     knitr,
     pkgdown,

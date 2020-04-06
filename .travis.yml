@@ -2,7 +2,8 @@
 
 language: R
 cache: packages
-
+r_github_packages:
+  - nathanvan/parallelsugar
 after success:
   - Rscript -e 'pkgdown::build_site()'
 
