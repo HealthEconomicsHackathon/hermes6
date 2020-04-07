@@ -12,11 +12,11 @@ markov_expanded_parallisesmp_furrr(
 )
 }
 \arguments{
+\item{n.states}{Number of states}
+
 \item{n.cycles}{Number of cycles}
 
 \item{n.samples}{Number of samples}
-
-\item{n.state}{Number of states}
 }
 \value{
 Output

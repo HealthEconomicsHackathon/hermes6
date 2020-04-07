@@ -7,7 +7,7 @@
 
 #' Reduced dimensions in markov smoking probabilistic model
 #' 
-#' @param n.state Number of states
+#' @param n.states Number of states
 #' @param n.cycles Number of cycles
 #' @param n.samples Number of samples
 #' @param n.cores Number of cores

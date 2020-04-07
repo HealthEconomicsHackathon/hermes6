@@ -13,13 +13,13 @@ markov_expanded_parallisesmp_foreach(
 )
 }
 \arguments{
+\item{n.states}{Number of states}
+
 \item{n.cycles}{Number of cycles}
 
 \item{n.samples}{Number of samples}
 
 \item{n.cores}{Number of cores}
-
-\item{n.state}{Number of states}
 }
 \value{
 Output
