@@ -15,11 +15,11 @@ LazyData: true
 Imports:
     foreach,
     doParallel,
+    dplyr,
     tibble,
     magrittr,
     VGAM,
     Rcpp,
-    tidyverse, 
     furrr,
     parallelsugar
 Suggests:
