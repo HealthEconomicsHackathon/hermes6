@@ -5,8 +5,21 @@
 \alias{markov_expanded_parallisesmp_foreach}
 \title{Reduced dimensions in markov smoking probabilistic model}
 \usage{
-markov_expanded_parallisesmp_foreach(n.states = 10, n.cycles = 100,
-  n.samples = 10000, n.cores = 1)
+markov_expanded_parallisesmp_foreach(
+  n.states = 10,
+  n.cycles = 100,
+  n.samples = 10000,
+  n.cores = 1
+)
+}
+\arguments{
+\item{n.states}{Number of states}
+
+\item{n.cycles}{Number of cycles}
+
+\item{n.samples}{Number of samples}
+
+\item{n.cores}{Number of cores}
 }
 \value{
 Output

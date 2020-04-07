@@ -6,6 +6,10 @@
 # install.packages("VGAM")
 
 #' Reduced dimensions in markov smoking probabilistic model
+#' 
+#' @param n.states Number of states
+#' @param n.cycles Number of cycles
+#' @param n.samples Number of samples
 #'
 #' @return Output
 #' @export

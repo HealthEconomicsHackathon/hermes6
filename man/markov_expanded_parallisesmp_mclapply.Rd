@@ -5,8 +5,18 @@
 \alias{markov_expanded_parallisesmp_mclapply}
 \title{Reduced dimensions in markov smoking probabilistic model}
 \usage{
-markov_expanded_parallisesmp_mclapply(n.states = 10, n.cycles = 100,
-  n.samples = 10000)
+markov_expanded_parallisesmp_mclapply(
+  n.states = 10,
+  n.cycles = 100,
+  n.samples = 10000
+)
+}
+\arguments{
+\item{n.states}{Number of states}
+
+\item{n.cycles}{Number of cycles}
+
+\item{n.samples}{Number of samples}
 }
 \value{
 Output

@@ -1,5 +1,5 @@
 Package: hermes6
-Title: What the Package Does (One Line, Title Case)
+Title: Comparisons of different techniques for speeding up a simple markov model
 Version: 0.0.1
 Authors@R: 
     person(given = "First",
@@ -7,21 +7,28 @@ Authors@R:
            role = c("aut", "cre"),
            email = "first.last@example.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: Comparisons of different techniques for speeding up a simple markov model.
+Depends: R (>= 3.5.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:
     foreach,
     doParallel,
+    dplyr,
     tibble,
     magrittr,
-    VGAM
-Suggests: 
+    VGAM,
+    Rcpp,
+    furrr,
+    parallelsugar
+Suggests:
     testthat (>= 2.1.0),
     knitr,
     pkgdown,
     rmarkdown
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
 VignetteBuilder: knitr
+LinkingTo: 
+    Rcpp

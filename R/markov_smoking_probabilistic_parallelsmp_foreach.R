@@ -6,6 +6,11 @@
 # install.packages("VGAM")
 
 #' Reduced dimensions in markov smoking probabilistic model
+#' 
+#' @param n.states Number of states
+#' @param n.cycles Number of cycles
+#' @param n.samples Number of samples
+#' @param n.cores Number of cores
 #'
 #' @return Output
 #' @export
@@ -138,7 +143,7 @@ markov_expanded_parallisesmp_foreach <- function(n.states = 10, n.cycles = 100, 
     # Loop over the PSA samples
     
     cl <- parallel::makeCluster(n.cores)
-    
+    i.sample <- NULL
     doParallel::registerDoParallel(cl)
     `%dopar%` <- foreach::`%dopar%`
     foreach::foreach(i.sample = c(1:n.samples), .combine = dplyr::bind_rows, .export = ls(globalenv())) %dopar% {

@@ -4,15 +4,12 @@
 # Load necessary libraries
 # If not installed use the following line first
 # install.packages("VGAM")
- 
+
 #' Reduced dimensions in markov smoking probabilistic model
-#' 
-#' @param n.cycles Number of cycles
-#' @param n.samples Number of samples
 #'
 #' @return Output
 #' @export
-markov_reduced_dimensions <- function(n.cycles = 100, n.samples = 10000) {
+markov_rcpp <- function() {
   set.seed(14143)
   
   # Define the number and names of treatments
@@ -26,6 +23,16 @@ markov_reduced_dimensions <- function(n.cycles = 100, n.samples = 10000) {
   n.states<-2
   state.names<-c("Smoking","Not smoking")
   
+  # Define the number of cycles
+  # This is 10 as the time horizon is 5 years and cycle length is 6 months
+  # The code will work for any even n.cycles (need to change the discounting code if
+  # an odd number of cycles is desired)
+  
+  n.cycles<-100
+  
+  # Define simulation parameters
+  # This is the number of PSA samples to use
+  n.samples<-10000
   
   #############################################################################
   ## Input parameters #########################################################
@@ -64,7 +71,7 @@ markov_reduced_dimensions <- function(n.cycles = 100, n.samples = 10000) {
   
   # QALY associated with 1-year in the smoking state is Normal(mean=0.95, SD=0.01)
   # Divide by 2 as cycle length is 6 months
-  state.qalys[,"Smoking"]<-stats::rnorm(n.samples,mean=0.95,sd=0.01)/2
+  state.qalys[,"Smoking"]<-rnorm(n.samples,mean=0.95,sd=0.01)/2
   
   # QALY associated with 1-year in the not smoking state is 1 (no uncertainty)
   # So all PSA samples have the same value
@@ -143,15 +150,9 @@ markov_reduced_dimensions <- function(n.cycles = 100, n.samples = 10000) {
       
       # Loop over the cycles
       # Cycle 1 is already defined so only need to update cycles 2:n.cycles
-      for(i.cycle in 2:n.cycles)
-      {
-        # Markov update
-        # Multiply previous cycle's cohort vector by transition matrix
-        # i.e. pi_j = pi_(j-1)*P
-        cohort.vectors[i.treatment, i.sample,i.cycle,]<-
-          cohort.vectors[i.treatment, i.sample,i.cycle-1,] %*%
-          transition.matrices_tr_sample
-      }
+      cohort.vectors[i.treatment, i.sample,,] <- 
+        rcpp_loop(mat_in = cohort.vectors[i.treatment, i.sample,,],transition = transition.matrices_tr_sample, n = n.cycles)
+        #r_for(v = cohort.vectors[i.treatment, i.sample,,],transition = transition.matrices_tr_sample, n.cycles = n.cycles)
       
       cohort.vectors_tr_sample <- cohort.vectors[i.treatment,i.sample,,]
       
@@ -224,3 +225,14 @@ markov_reduced_dimensions <- function(n.cycles = 100, n.samples = 10000) {
   output
 }
 
+r_for <- function(v, transition, n.cycles){
+  
+  for(i in 2:n.cycles)
+  {
+    # Markov update
+    # Multiply previous cycle's cohort vector by transition matrix
+    # i.e. pi_j = pi_(j-1)*P
+    v[i, ] <- v[i-1, ] %*% transition
+  }
+  return(v)
+}
