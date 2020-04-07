@@ -9,7 +9,7 @@
 #'
 #' @return Output
 #' @export
-markov_reduced_dimensions <- function() {
+markov_reduced_dimensions <- function(n.cycles = 100, n.samples = 10000) {
   set.seed(14143)
   
   # Define the number and names of treatments
@@ -23,16 +23,6 @@ markov_reduced_dimensions <- function() {
   n.states<-2
   state.names<-c("Smoking","Not smoking")
   
-  # Define the number of cycles
-  # This is 10 as the time horizon is 5 years and cycle length is 6 months
-  # The code will work for any even n.cycles (need to change the discounting code if
-  # an odd number of cycles is desired)
-  
-  n.cycles<-100
-  
-  # Define simulation parameters
-  # This is the number of PSA samples to use
-  n.samples<-10000
   
   #############################################################################
   ## Input parameters #########################################################

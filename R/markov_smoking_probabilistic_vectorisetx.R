@@ -3,14 +3,13 @@
 
 # Load necessary libraries
 # If not installed use the following line first
+# install.packages("VGAM")
 
-
-#' Markov smoking model
+#' Reduced dimensions in markov smoking probabilistic model
 #'
 #' @return Output
 #' @export
-#'
-markov <- function(n.cycles = 100, n.samples = 10000) {
+markov_vectorisetx <- function(n.cycles = 100, n.samples = 10000) {
   set.seed(14143)
   
   # Define the number and names of treatments
@@ -23,7 +22,7 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
   # This is two and they are "Smoking" and "Not smoking"
   n.states<-2
   state.names<-c("Smoking","Not smoking")
-  
+
   
   #############################################################################
   ## Input parameters #########################################################
@@ -62,7 +61,7 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
   
   # QALY associated with 1-year in the smoking state is Normal(mean=0.95, SD=0.01)
   # Divide by 2 as cycle length is 6 months
-  state.qalys[,"Smoking"]<-stats::rnorm(n.samples,mean=0.95,sd=0.01)/2
+  state.qalys[,"Smoking"]<-rnorm(n.samples,mean=0.95,sd=0.01)/2
   
   # QALY associated with 1-year in the not smoking state is 1 (no uncertainty)
   # So all PSA samples have the same value
@@ -118,16 +117,35 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
   total.qalys<-array(dim=c(n.treatments,n.samples),
                      dimnames=list(treatment.names,NULL))
   
+  #i.treatment <- 1
+  #i.sample <- 1
+  #i.cycle <- 2
+  
+  disc_vec <- (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
   
   # The remainder of the cohort.vectors will be filled in by Markov updating below
   
   # Main model code
   # Loop over the treatment options
-  for(i.treatment in 1:n.treatments)
-  {
+
+  
+  
+  lapply(c(1:n.treatments), function(i.treatment){
+    transition.matrices_tr <- transition.matrices[i.treatment,,,]
+    cohort.vectors_tr <- cohort.vectors[i.treatment,,,]
+    cycle.costs_tr <- cycle.costs[i.treatment,,]
+    cycle.qalys_tr <- cycle.qalys[i.treatment,,]
+    treatment.costs_tr <- treatment.costs[i.treatment,]
+    total.costs_tr <- total.costs[i.treatment,]
+    total.qalys_tr <- total.qalys[i.treatment,]
     # Loop over the PSA samples
     for(i.sample in 1:n.samples)
     {
+      
+      transition.matrices_tr_sample <- transition.matrices_tr[i.sample,,]
+
+      cohort.vectors_tr_sample <- cohort.vectors_tr[i.sample,,]
+      
       # Loop over the cycles
       # Cycle 1 is already defined so only need to update cycles 2:n.cycles
       for(i.cycle in 2:n.cycles)
@@ -135,55 +153,42 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
         # Markov update
         # Multiply previous cycle's cohort vector by transition matrix
         # i.e. pi_j = pi_(j-1)*P
-        cohort.vectors[i.treatment,i.sample,i.cycle,]<-
-          cohort.vectors[i.treatment,i.sample,i.cycle-1,]%*%
-          transition.matrices[i.treatment,i.sample,,]
+        cohort.vectors_tr_sample[i.cycle,] <- cohort.vectors_tr_sample[i.cycle-1,] %*% transition.matrices_tr_sample
       }
       
-      # Now use the cohort vectors to calculate the 
-      # total costs for each cycle
-      cycle.costs[i.treatment,i.sample,]<-
-        cohort.vectors[i.treatment,i.sample,,]%*%state.costs[i.sample,]
-      # And total QALYs for each cycle
-      cycle.qalys[i.treatment,i.sample,]<-
-        cohort.vectors[i.treatment,i.sample,,]%*%state.qalys[i.sample,]
+      cycle.costs_tr[i.sample,] <- cohort.vectors_tr_sample%*%state.costs[i.sample,]
+      cycle.qalys_tr[i.sample,] <- cohort.vectors_tr_sample%*%state.qalys[i.sample,]
+      total.costs_tr[i.sample] <- treatment.costs_tr[i.sample] + cycle.costs_tr[i.sample,]%*%disc_vec
+      total.qalys_tr[i.sample] <- cycle.qalys_tr[i.sample,]%*%disc_vec
       
-      # Combine the cycle.costs and treatment.costs to get total costs
-      # Apply the discount factor 
-      # (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
-      # Each year acounts for two cycles so need to repeat the discount values
-      total.costs[i.treatment,i.sample]<-treatment.costs[i.treatment,i.sample]+
-        cycle.costs[i.treatment,i.sample,]%*%
-        (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
-      
-      # Combine the cycle.qalys to get total qalys
-      # Apply the discount factor 
-      # (1 in first year, 1.035 in second, 1.035^2 in third, and so on)
-      # Each year acounts for two cycles so need to repeat the discount values
-      total.qalys[i.treatment,i.sample]<-cycle.qalys[i.treatment,i.sample,]%*%
-        (1/1.035)^rep(c(0:(n.cycles/2-1)),each=2)
     }
-  }
+    
+    return(list(total.qalys = total.qalys_tr, total.costs = total.costs_tr))
+    
+  }) -> output.list
+  
+  names(output.list) <- treatment.names 
   
   #############################################################################
   ## Analysis of results ######################################################
   #############################################################################
+  
   output <- list()
   # Average costs
   # These are ?50 on the website and 0 on standard of care as there are no
   # costs other than the website subscription cost
-  output$average.costs<-rowMeans(total.costs)
+  output$average.costs<-sapply(treatment.names, function(tx){mean(output.list[[tx]]$total.costs)})
   # Average effects (in QALY units)
   # These are slightly higher on the website as higher probability of 
   # quitting smoking
-  output$average.effects<-rowMeans(total.qalys)
+  output$average.effects<-sapply(treatment.names, function(tx){mean(output.list[[tx]]$total.qalys)})
   
   # Incremental costs and effects relative to standard of care
   # No uncertainty in the costs as the website cost is fixed at ?50
-  output$incremental.costs<-total.costs["SoC with website",]-total.costs["SoC",]
+  output$incremental.costs<-output.list[["SoC with website"]]$total.costs - output.list[["SoC"]]$total.costs
   # In some samples the website leads to higher QALYs but in others it is negative
   # There is uncertainty as to whether the website is an improvement over SoC
-  output$incremental.effects<-total.qalys["SoC with website",]-total.qalys["SoC",]
+  output$incremental.effects<-output.list[["SoC with website"]]$total.qalys - output.list[["SoC"]]$total.qalys
   
   # The ICER comparing Standard of care with website to standard of care
   # This is much lower than the ?20,000 willingness-to-pay threshold indicating
@@ -208,3 +213,4 @@ markov <- function(n.cycles = 100, n.samples = 10000) {
   # Now use the BCEA package to analyse the results...
   output
 }
+

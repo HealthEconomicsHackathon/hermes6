@@ -4,7 +4,7 @@
 \alias{markov}
 \title{Markov smoking model}
 \usage{
-markov()
+markov(n.cycles = 100, n.samples = 10000)
 }
 \value{
 Output
