@@ -1,7 +1,7 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// [Rcpp::export]
+// [[Rcpp::export]]
 NumericMatrix rcpp_loop(NumericMatrix mat_in, NumericMatrix transition, int n) {
   NumericMatrix out(mat_in.nrow(), transition.ncol());
   out(0, _) = mat_in(0, _);
