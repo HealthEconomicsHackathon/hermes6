@@ -7,6 +7,11 @@
 \usage{
 markov_reduced_dimensions(n.cycles = 100, n.samples = 10000)
 }
+\arguments{
+\item{n.cycles}{Number of cycles}
+
+\item{n.samples}{Number of samples}
+}
 \value{
 Output
 }

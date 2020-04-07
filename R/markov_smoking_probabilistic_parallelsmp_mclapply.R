@@ -7,6 +7,10 @@
 
 #' Reduced dimensions in markov smoking probabilistic model
 #'
+#' @param n.state Number of states
+#' @param n.cycles Number of cycles
+#' @param n.samples Number of samples
+#' 
 #' @return Output
 #' @export
 markov_expanded_parallisesmp_mclapply <- function(n.states = 10, n.cycles = 100, n.samples = 10000) {

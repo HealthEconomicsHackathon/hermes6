@@ -6,6 +6,9 @@
 
 
 #' Markov smoking model
+#' 
+#' @param n.cycles Number of cycles
+#' @param n.samples Number of samples
 #'
 #' @return Output
 #' @export
